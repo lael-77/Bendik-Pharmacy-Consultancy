@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaCare Admin Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 50%, #f0fdfa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 28rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .icon-pill {
+            background: linear-gradient(135deg, #16a34a, #0d9488);
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .icon-pill::before {
+            content: "💊";
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .brand-title {
+            font-size: 1.875rem;
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .brand-subtitle {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 0.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: none;
+            overflow: hidden;
+        }
+
+        .card-header {
+            text-align: center;
+            padding: 1.5rem 1.5rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .shield-icon {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .shield-icon::before {
+            content: "🛡️";
+            font-size: 3rem;
+            color: #16a34a;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-description {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .input {
+            height: 3rem;
+            padding: 0 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #16a34a;
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.2s ease;
+            width: 1.5rem;
+            height: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle:hover {
+            color: #6b7280;
+        }
+
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.875rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox {
+            width: 1rem;
+            height: 1rem;
+            accent-color: #16a34a;
+        }
+
+        .forgot-link {
+            color: #16a34a;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .forgot-link:hover {
+            color: #15803d;
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            width: 100%;
+            height: 3rem;
+            background: linear-gradient(135deg, #16a34a, #0d9488);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px 0 rgba(22, 163, 74, 0.3);
+            position: relative;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(135deg, #15803d, #0f766e);
+            transform: scale(1.02);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spinner {
+            display: none;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid white;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        .login-btn.loading .spinner {
+            display: inline-block;
+        }
+
+        .login-btn.loading .btn-text {
+            display: none;
+        }
+
+        .login-btn.loading .loading-text {
+            display: inline;
+        }
+
+        .loading-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .security-notice {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .security-icon::before {
+            content: "🛡️";
+            font-size: 1rem;
+            color: #16a34a;
+            margin-top: 0.125rem;
+        }
+
+        .security-text {
+            font-size: 0.75rem;
+            color: #166534;
+        }
+
+        .security-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .footer p:first-child {
+            margin-bottom: 0.25rem;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .brand-title {
+                font-size: 1.5rem;
+            }
+            
+            .card-title {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Pharmacy Branding -->
+        <div class="header">
+            <div class="brand">
+                <div class=""></div>
+                <h1 class="brand-title">BendikPharmacy</h1>
+            </div>
+            <p class="brand-subtitle">Admin Portal</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="shield-icon"></div>
+                <h2 class="card-title">Administrator Login</h2>
+                <p class="card-description">Secure access to pharmacy management system</p>
+            </div>
+            
+            <div class="card-content">
+                <form class="form" id="loginForm">
+                    <!-- Email Field -->
+                    <div class="form-group">
+                        <label for="email" class="label">Admin Email</label>
+                        <input
+                            id="email"
+                            type="email"
+                            placeholder="admin@gmail.com"
+                            class="input"
+                            required
+                        />
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="form-group">
+                        <label for="password" class="label">Password</label>
+                        <div class="password-container">
+                            <input
+                                id="password"
+                                type="password"
+                                placeholder="Enter your secure password"
+                                class="input"
+                                required
+                            />
+                            <button type="button" class="password-toggle" id="togglePassword">
+                                👁️
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Remember Me & Forgot Password -->
+                    <div class="form-options">
+                        <div class="checkbox-group">
+                            <input id="remember" type="checkbox" class="checkbox" />
+                            <label for="remember" class="label">Remember me</label>
+                        </div>
+                        <a href="#" class="forgot-link">Forgot password?</a>
+                    </div>
+
+                    <!-- Login Button -->
+                    <button type="submit" class="login-btn" id="loginBtn">
+                        <div class="spinner"></div>
+                        <span class="btn-text">Sign In to Admin Panel</span>
+                        <span class="loading-text">Signing in...</span>
+                    </button>
+                </form>
+
+                <!-- Security Notice -->
+                <div class="security-notice">
+                    <div class="security-icon"></div>
+                    <div class="security-text">
+                        <p class="security-title">Secure Access</p>
+                        <p>This system is protected.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2025 BendikPharmacy Admin System. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        // Password toggle functionality
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+
+        // Form submission with loading state
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            // Show loading state
+            loginBtn.classList.add('loading');
+            loginBtn.disabled = true;
+
+            // Simulate login process
+            fetch('http://localhost:3001/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (res.ok && data.token) {
+                    localStorage.setItem('token', data.token);
+                    window.location.href = '/admin-dashboard.html';
+                } else {
+                    alert(data.message || 'Login failed. Invalid email or password.');
+                }
+            })
+            .catch(() => {
+                alert('Network error.');
+            })
+            .finally(() => {
+                loginBtn.classList.remove('loading');
+                loginBtn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>
