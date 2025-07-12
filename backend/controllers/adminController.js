@@ -27,18 +27,31 @@ async function login(req, res) {
 
 async function signup(req, res) {
     const { email, password } = req.body;
+    console.log('🔍 Signup attempt for email:', email);
+    
     if (!email || !password) {
+        console.log('❌ Missing email or password');
         return res.status(400).json({ message: 'Email and password are required.' });
     }
     try {
+        console.log('🔍 Checking if admin exists...');
         const existing = await findAdminByEmail(req.db, email);
         if (existing) {
+            console.log('❌ Email already exists:', email);
             return res.status(409).json({ message: 'Email already exists.' });
         }
+        
+        console.log('🔍 Hashing password...');
         const hashed = await bcrypt.hash(password, 10);
+        
+        console.log('🔍 Inserting new admin into database...');
         await req.db.query('INSERT INTO admins (email, password) VALUES (?, ?)', [email, hashed]);
+        
+        console.log('✅ Admin created successfully:', email);
         res.status(201).json({ message: 'Admin created successfully.' });
     } catch (err) {
+        console.error('❌ Signup error:', err.message);
+        console.error('❌ Full error:', err);
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 }

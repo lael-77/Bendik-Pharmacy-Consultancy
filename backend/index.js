@@ -21,6 +21,48 @@ const db = mysql.createPool({
     queueLimit: 0
 });
 
+// Test database connection
+db.getConnection()
+  .then(connection => {
+    console.log('✅ Database connected successfully');
+    console.log('Database config:', {
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+      port: process.env.DB_PORT
+    });
+    
+    // Check if admins table exists
+    return connection.query('SHOW TABLES LIKE "admins"');
+  })
+  .then(([rows]) => {
+    if (rows.length > 0) {
+      console.log('✅ admins table exists');
+    } else {
+      console.log('❌ admins table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE admins (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          password VARCHAR(255) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
+  .then(() => {
+    console.log('✅ Database setup complete');
+  })
+  .catch(err => {
+    console.error('❌ Database connection/setup failed:', err.message);
+    console.error('Database config:', {
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+      port: process.env.DB_PORT
+    });
+  });
+
 app.use(cors({
   origin: [
     'http://localhost:3000',
