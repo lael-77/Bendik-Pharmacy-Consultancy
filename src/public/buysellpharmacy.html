@@ -164,7 +164,7 @@
         <!-- Buy Pharmacy Form -->
         <div class="form-container" id="buyFormContainer">
             <h1>Buy Pharmacy Inquiry</h1>
-            <form id="buyForm" action="process-buy.php" method="POST">
+            <form id="buyForm">
                 <div class="form-group">
                     <label for="name">Full Name</label>
                     <input type="text" id="name" name="name" required>
@@ -205,7 +205,7 @@
         <!-- Sell Pharmacy Form -->
         <div class="form-container hidden" id="sellFormContainer">
             <h1>Sell Your Pharmacy</h1>
-            <form id="sellForm" action="process-sell.php" method="POST" enctype="multipart/form-data">
+            <form id="sellForm" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="pharmacy_name">Pharmacy Name</label>
                     <input type="text" id="pharmacy_name" name="pharmacy_name" required>
@@ -282,7 +282,7 @@
             };
             const res = await fetch('http://localhost:3001/api/buy-inquiries', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
             if (res.ok) {
@@ -309,7 +309,7 @@
             };
             const res = await fetch('http://localhost:3001/api/sell-listings', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
             if (res.ok) {
