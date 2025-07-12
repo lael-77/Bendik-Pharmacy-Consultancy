@@ -19,7 +19,14 @@ const db = mysql.createPool({
     queueLimit: 0
 });
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://bendikpharmacyconsult.com',
+    'https://bendik-pharmacy-consultancy.onrender.com'
+  ],
+  credentials: true
+}));
 app.use(bodyParser.json());
 app.use(morgan('dev'));
 
