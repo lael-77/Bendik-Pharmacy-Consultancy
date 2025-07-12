@@ -33,7 +33,7 @@ db.getConnection()
     });
     
     // Check if admins table exists
-    return connection.query('SHOW TABLES LIKE "admins"');
+    return connection.query('SHOW TABLES LIKE `admins`');
   })
   .then(([rows]) => {
     if (rows.length > 0) {
@@ -45,6 +45,54 @@ db.getConnection()
           id INT AUTO_INCREMENT PRIMARY KEY,
           email VARCHAR(255) UNIQUE NOT NULL,
           password VARCHAR(255) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
+  .then(() => {
+    // Check if buy_inquiries table exists
+    return db.query('SHOW TABLES LIKE `buy_inquiries`');
+  })
+  .then(([rows]) => {
+    if (rows.length > 0) {
+      console.log('✅ buy_inquiries table exists');
+    } else {
+      console.log('❌ buy_inquiries table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE buy_inquiries (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          full_name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          phone VARCHAR(50) NOT NULL,
+          location VARCHAR(255) NOT NULL,
+          district VARCHAR(255) NOT NULL,
+          max_budget DECIMAL(15,2) NOT NULL,
+          status VARCHAR(50) DEFAULT 'New',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
+  .then(() => {
+    // Check if sell_listings table exists
+    return db.query('SHOW TABLES LIKE `sell_listings`');
+  })
+  .then(([rows]) => {
+    if (rows.length > 0) {
+      console.log('✅ sell_listings table exists');
+    } else {
+      console.log('❌ sell_listings table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE sell_listings (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          pharmacy_name VARCHAR(255) NOT NULL,
+          owner_name VARCHAR(255) NOT NULL,
+          location VARCHAR(255) NOT NULL,
+          sell_price DECIMAL(15,2) NOT NULL,
+          contact_email VARCHAR(255) NOT NULL,
+          contact_phone VARCHAR(50) NOT NULL,
+          status VARCHAR(50) DEFAULT 'New',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
