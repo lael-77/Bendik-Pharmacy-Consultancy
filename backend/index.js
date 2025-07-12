@@ -32,11 +32,11 @@ db.getConnection()
       port: process.env.DB_PORT
     });
     
-    // Check if admins table exists
-    return connection.query('SHOW TABLES LIKE `admins`');
+    // Check if admins table exists using a different approach
+    return connection.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'admins'", [process.env.DB_NAME]);
   })
   .then(([rows]) => {
-    if (rows.length > 0) {
+    if (rows[0].count > 0) {
       console.log('✅ admins table exists');
     } else {
       console.log('❌ admins table does not exist - creating it...');
@@ -52,10 +52,10 @@ db.getConnection()
   })
   .then(() => {
     // Check if buy_inquiries table exists
-    return db.query('SHOW TABLES LIKE `buy_inquiries`');
+    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'buy_inquiries'", [process.env.DB_NAME]);
   })
   .then(([rows]) => {
-    if (rows.length > 0) {
+    if (rows[0].count > 0) {
       console.log('✅ buy_inquiries table exists');
     } else {
       console.log('❌ buy_inquiries table does not exist - creating it...');
@@ -76,10 +76,10 @@ db.getConnection()
   })
   .then(() => {
     // Check if sell_listings table exists
-    return db.query('SHOW TABLES LIKE `sell_listings`');
+    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'sell_listings'", [process.env.DB_NAME]);
   })
   .then(([rows]) => {
-    if (rows.length > 0) {
+    if (rows[0].count > 0) {
       console.log('✅ sell_listings table exists');
     } else {
       console.log('❌ sell_listings table does not exist - creating it...');
