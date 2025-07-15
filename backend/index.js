@@ -115,7 +115,7 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'https://bendikpharmacyconsult.com',
-    'https://www.bendikpharmacyconsult.com'
+    'https://www.bendikpharmacyconsult.com',
     'https://bendik-pharmacy-consultancy.onrender.com'
   ],
   credentials: true
