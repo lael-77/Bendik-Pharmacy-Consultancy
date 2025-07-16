@@ -99,6 +99,42 @@ db.getConnection()
     }
   })
   .then(() => {
+    // Check if client_requests table exists
+    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'client_requests'", [process.env.DB_NAME]);
+  })
+  .then(([rows]) => {
+    if (rows[0].count > 0) {
+      console.log('✅ client_requests table exists');
+    } else {
+      console.log('❌ client_requests table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE client_requests (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          fullName VARCHAR(255) NOT NULL,
+          organizationName VARCHAR(255) NOT NULL,
+          businessType VARCHAR(100) NOT NULL,
+          nationalId VARCHAR(100) NOT NULL,
+          tinNumber VARCHAR(100) NOT NULL,
+          location VARCHAR(255) NOT NULL,
+          phoneNumber VARCHAR(50) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          contactMode VARCHAR(50) NOT NULL,
+          services TEXT,
+          otherService VARCHAR(255),
+          urgency VARCHAR(50) NOT NULL,
+          specificDates VARCHAR(255),
+          description TEXT NOT NULL,
+          requireQuotation VARCHAR(10) NOT NULL,
+          paymentMode VARCHAR(50) NOT NULL,
+          invoicingName VARCHAR(255),
+          declaration VARCHAR(10) NOT NULL,
+          signature VARCHAR(255) NOT NULL,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
+  .then(() => {
     console.log('✅ Database setup complete');
   })
   .catch(err => {
@@ -132,10 +168,12 @@ app.use((req, res, next) => {
 const adminRoutes = require('./routes/admin');
 const buyInquiryRoutes = require('./routes/buyInquiries');
 const sellListingRoutes = require('./routes/sellListings');
+const clientRequestRoutes = require('./routes/clientRequests');
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/buy-inquiries', buyInquiryRoutes);
 app.use('/api/sell-listings', sellListingRoutes);
+app.use('/api/client-requests', clientRequestRoutes);
 
 app.get('/', (req, res) => {
     res.send('Pharmacy backend running');
