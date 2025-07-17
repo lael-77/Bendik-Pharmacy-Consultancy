@@ -152,6 +152,7 @@ app.use(cors({
     'http://localhost:3000',
     'https://bendikpharmacyconsult.com',
     'https://www.bendikpharmacyconsult.com',
+    'https://kit.fontawesome.com/a076d05399.js',
     'https://bendik-pharmacy-consultancy.onrender.com'
   ],
   credentials: true
