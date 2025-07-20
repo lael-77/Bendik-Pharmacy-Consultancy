@@ -21,6 +21,7 @@ async function createClientRequest(db, data) {
         urgency,
         specificDates,
         description,
+        PreferedInsurance,
         requireQuotation,
         paymentMode,
         invoicingName,
@@ -29,7 +30,7 @@ async function createClientRequest(db, data) {
     } = data;
     const [result] = await db.query(
         `INSERT INTO client_requests (
-            fullName, organizationName, businessType, nationalId, tinNumber, location, phoneNumber, email, contactMode, services, otherService, urgency, specificDates, description, requireQuotation, paymentMode, invoicingName, declaration, signature, createdAt
+            fullName, organizationName, businessType, nationalId, tinNumber, location, phoneNumber, email, contactMode, services, otherService, urgency, specificDates, description, PreferedInsurance, requireQuotation, paymentMode, invoicingName, declaration, signature, createdAt
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
             fullName,
