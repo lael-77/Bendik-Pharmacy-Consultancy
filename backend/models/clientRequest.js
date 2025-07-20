@@ -47,6 +47,7 @@ async function createClientRequest(db, data) {
             urgency,
             specificDates,
             description,
+            PreferedInsurance,
             requireQuotation,
             paymentMode,
             invoicingName,
