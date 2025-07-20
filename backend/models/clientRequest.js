@@ -31,7 +31,7 @@ async function createClientRequest(db, data) {
     const [result] = await db.query(
         `INSERT INTO client_requests (
             fullName, organizationName, businessType, nationalId, tinNumber, location, phoneNumber, email, contactMode, services, otherService, urgency, specificDates, description, PreferedInsurance, requireQuotation, paymentMode, invoicingName, declaration, signature, createdAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
             fullName,
             organizationName,
