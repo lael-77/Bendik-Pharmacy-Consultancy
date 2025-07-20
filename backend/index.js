@@ -124,6 +124,7 @@ db.getConnection()
           urgency VARCHAR(50) NOT NULL,
           specificDates VARCHAR(255),
           description TEXT NOT NULL,
+          PreferedInsurance TEXT NOT NULL,
           requireQuotation VARCHAR(10) NOT NULL,
           paymentMode VARCHAR(50) NOT NULL,
           invoicingName VARCHAR(255),
