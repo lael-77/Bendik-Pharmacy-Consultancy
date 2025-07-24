@@ -51,54 +51,6 @@ db.getConnection()
     }
   })
   .then(() => {
-    // Check if buy_inquiries table exists
-    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'buy_inquiries'", [process.env.DB_NAME]);
-  })
-  .then(([rows]) => {
-    if (rows[0].count > 0) {
-      console.log('✅ buy_inquiries table exists');
-    } else {
-      console.log('❌ buy_inquiries table does not exist - creating it...');
-      return db.query(`
-        CREATE TABLE buy_inquiries (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          full_name VARCHAR(255) NOT NULL,
-          email VARCHAR(255) NOT NULL,
-          phone VARCHAR(50) NOT NULL,
-          location VARCHAR(255) NOT NULL,
-          district VARCHAR(255) NOT NULL,
-          max_budget DECIMAL(15,2) NOT NULL,
-          status VARCHAR(50) DEFAULT 'New',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-    }
-  })
-  .then(() => {
-    // Check if sell_listings table exists
-    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'sell_listings'", [process.env.DB_NAME]);
-  })
-  .then(([rows]) => {
-    if (rows[0].count > 0) {
-      console.log('✅ sell_listings table exists');
-    } else {
-      console.log('❌ sell_listings table does not exist - creating it...');
-      return db.query(`
-        CREATE TABLE sell_listings (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          pharmacy_name VARCHAR(255) NOT NULL,
-          owner_name VARCHAR(255) NOT NULL,
-          location VARCHAR(255) NOT NULL,
-          sell_price DECIMAL(15,2) NOT NULL,
-          contact_email VARCHAR(255) NOT NULL,
-          contact_phone VARCHAR(50) NOT NULL,
-          status VARCHAR(50) DEFAULT 'New',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-    }
-  })
-  .then(() => {
     // Check if client_requests table exists
     return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'client_requests'", [process.env.DB_NAME]);
   })
@@ -130,6 +82,45 @@ db.getConnection()
           invoicingName VARCHAR(255),
           declaration VARCHAR(10) NOT NULL,
           signature VARCHAR(255) NOT NULL,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
+  .then(() => {
+    // Check if pharmacy_purchase_requests table exists
+    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'pharmacy_purchase_requests'", [process.env.DB_NAME]);
+  })
+  .then(([rows]) => {
+    if (rows[0].count > 0) {
+      console.log('✅ pharmacy_purchase_requests table exists');
+    } else {
+      console.log('❌ pharmacy_purchase_requests table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE pharmacy_purchase_requests (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          buyerName VARCHAR(255) NOT NULL,
+          phoneNumber VARCHAR(50) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          contactMethod VARCHAR(50) NOT NULL,
+          nationalId VARCHAR(100),
+          tinNumber VARCHAR(100),
+          pharmacyType TEXT,
+          otherType VARCHAR(255),
+          preferredLocation VARCHAR(255),
+          operatingArea VARCHAR(50),
+          businessStatus VARCHAR(50),
+          ownershipType VARCHAR(50),
+          minRevenue VARCHAR(100),
+          budgetRange VARCHAR(100),
+          budgetFlexible VARCHAR(20),
+          timeline VARCHAR(50),
+          insurancePartners VARCHAR(255),
+          supportServices TEXT,
+          otherServices VARCHAR(255),
+          additionalInfo TEXT,
+          clientSignature VARCHAR(255) NOT NULL,
+          date DATE NOT NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -168,14 +159,12 @@ app.use((req, res, next) => {
 });
 
 const adminRoutes = require('./routes/admin');
-const buyInquiryRoutes = require('./routes/buyInquiries');
-const sellListingRoutes = require('./routes/sellListings');
 const clientRequestRoutes = require('./routes/clientRequests');
+const pharmacyPurchaseRequestRoutes = require('./routes/pharmacyPurchaseRequests');
 
 app.use('/api/admin', adminRoutes);
-app.use('/api/buy-inquiries', buyInquiryRoutes);
-app.use('/api/sell-listings', sellListingRoutes);
 app.use('/api/client-requests', clientRequestRoutes);
+app.use('/api/pharmacy-purchase-requests', pharmacyPurchaseRequestRoutes);
 
 app.get('/', (req, res) => {
     res.send('Pharmacy backend running');
