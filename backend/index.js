@@ -127,6 +127,50 @@ db.getConnection()
     }
   })
   .then(() => {
+    // Check if pharmacy_sale_requests table exists
+    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'pharmacy_sale_requests'", [process.env.DB_NAME]);
+  })
+  .then(([rows]) => {
+    if (rows[0].count > 0) {
+      console.log('✅ pharmacy_sale_requests table exists');
+    } else {
+      console.log('❌ pharmacy_sale_requests table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE pharmacy_sale_requests (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          ownerName VARCHAR(255) NOT NULL,
+          phoneNumber VARCHAR(50) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          contactMode VARCHAR(50),
+          pharmacyName VARCHAR(255),
+          businessType VARCHAR(50),
+          location VARCHAR(255),
+          ownershipType VARCHAR(50),
+          premisesSize VARCHAR(50),
+          licenseStatus VARCHAR(50),
+          years VARCHAR(50),
+          salesRange VARCHAR(100),
+          insurancePartners VARCHAR(255),
+          staffCount VARCHAR(50),
+          inventoryValue VARCHAR(100),
+          equipmentIncluded VARCHAR(50),
+          reason VARCHAR(255),
+          debts VARCHAR(10),
+          debtAmount VARCHAR(100),
+          price VARCHAR(100),
+          negotiable VARCHAR(10),
+          timeline VARCHAR(50),
+          valuationService VARCHAR(10),
+          additionalInfo TEXT,
+          documents TEXT,
+          signature VARCHAR(255) NOT NULL,
+          date DATE NOT NULL,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
+  .then(() => {
     console.log('✅ Database setup complete');
   })
   .catch(err => {
@@ -161,10 +205,12 @@ app.use((req, res, next) => {
 const adminRoutes = require('./routes/admin');
 const clientRequestRoutes = require('./routes/clientRequests');
 const pharmacyPurchaseRequestRoutes = require('./routes/pharmacyPurchaseRequests');
+const pharmacySaleRequestRoutes = require('./routes/pharmacySaleRequests');
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/client-requests', clientRequestRoutes);
 app.use('/api/pharmacy-purchase-requests', pharmacyPurchaseRequestRoutes);
+app.use('/api/pharmacy-sale-requests', pharmacySaleRequestRoutes);
 
 app.get('/', (req, res) => {
     res.send('Pharmacy backend running');
