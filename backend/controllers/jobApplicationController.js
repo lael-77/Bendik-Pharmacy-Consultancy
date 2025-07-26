@@ -60,6 +60,5 @@ async function createWithFile(req, res) {
 
 module.exports = {
     getAll,
-    create,
-    createWithFile
+    create
 }; 
