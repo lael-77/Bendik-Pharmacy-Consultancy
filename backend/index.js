@@ -222,6 +222,61 @@ db.getConnection()
     }
   })
   .then(() => {
+    // Check if recruitment_requests table exists
+    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'recruitment_requests'", [process.env.DB_NAME]);
+  })
+  .then(([rows]) => {
+    if (rows[0].count > 0) {
+      console.log('✅ recruitment_requests table exists');
+    } else {
+      console.log('❌ recruitment_requests table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE recruitment_requests (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          pharmacyName VARCHAR(255) NOT NULL,
+          contactPerson VARCHAR(255) NOT NULL,
+          phone VARCHAR(50) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          location VARCHAR(255) NOT NULL,
+          type TEXT,
+          typeOther VARCHAR(255),
+          branches INT,
+          staffCount INT,
+          position VARCHAR(100),
+          positionsAvailable INT,
+          employmentType VARCHAR(50),
+          startDate DATE,
+          workingHours VARCHAR(255),
+          salaryFrom VARCHAR(100),
+          salaryTo VARCHAR(100),
+          housingTransport VARCHAR(10),
+          bonus VARCHAR(10),
+          bonusDetails VARCHAR(255),
+          qualification TEXT,
+          license TEXT,
+          experience VARCHAR(50),
+          language TEXT,
+          otherLanguage VARCHAR(100),
+          additionalSkills TEXT,
+          responsibility1 VARCHAR(255),
+          responsibility2 VARCHAR(255),
+          responsibility3 VARCHAR(255),
+          responsibility4 VARCHAR(255),
+          responsibility5 VARCHAR(255),
+          reportingLine VARCHAR(255),
+          systemUsed VARCHAR(255),
+          teamStructure VARCHAR(255),
+          training VARCHAR(10),
+          challenges TEXT,
+          support TEXT,
+          signature VARCHAR(255) NOT NULL,
+          signatureDate DATE NOT NULL,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
+  .then(() => {
     console.log('✅ Database setup complete');
   })
   .catch(err => {
@@ -258,12 +313,14 @@ const clientRequestRoutes = require('./routes/clientRequests');
 const pharmacyPurchaseRequestRoutes = require('./routes/pharmacyPurchaseRequests');
 const pharmacySaleRequestRoutes = require('./routes/pharmacySaleRequests');
 const jobApplicationRoutes = require('./routes/jobApplications');
+const recruitmentRequestRoutes = require('./routes/recruitmentRequests');
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/client-requests', clientRequestRoutes);
 app.use('/api/pharmacy-purchase-requests', pharmacyPurchaseRequestRoutes);
 app.use('/api/pharmacy-sale-requests', pharmacySaleRequestRoutes);
 app.use('/api/job-applications', jobApplicationRoutes);
+app.use('/api/recruitment-requests', recruitmentRequestRoutes);
 
 app.get('/', (req, res) => {
     res.send('Pharmacy backend running');
