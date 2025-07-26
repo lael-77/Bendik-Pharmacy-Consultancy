@@ -171,6 +171,57 @@ db.getConnection()
     }
   })
   .then(() => {
+    // Check if job_applications table exists
+    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'job_applications'", [process.env.DB_NAME]);
+  })
+  .then(([rows]) => {
+    if (rows[0].count > 0) {
+      console.log('✅ job_applications table exists');
+    } else {
+      console.log('❌ job_applications table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE job_applications (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          fullName VARCHAR(255) NOT NULL,
+          dob DATE,
+          nationality VARCHAR(100),
+          idNumber VARCHAR(100),
+          npcNumber VARCHAR(100),
+          phone VARCHAR(50) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          contactMode TEXT,
+          position VARCHAR(100),
+          otherPosition VARCHAR(255),
+          licenseStatus VARCHAR(50),
+          qualification VARCHAR(255),
+          institution VARCHAR(255),
+          graduationYear VARCHAR(10),
+          experience VARCHAR(50),
+          pharmacyType TEXT,
+          schedule VARCHAR(50),
+          locationPref VARCHAR(255),
+          relocate VARCHAR(10),
+          salaryFrom VARCHAR(100),
+          salaryTo VARCHAR(100),
+          startDate DATE,
+          skills TEXT,
+          otherSkills TEXT,
+          employer1 VARCHAR(255),
+          position1 VARCHAR(255),
+          duration1 VARCHAR(100),
+          reason1 VARCHAR(255),
+          refName1 VARCHAR(255),
+          refRelation1 VARCHAR(100),
+          refPhone1 VARCHAR(50),
+          signature VARCHAR(255) NOT NULL,
+          signatureDate DATE NOT NULL,
+          cv VARCHAR(255),
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
+  .then(() => {
     console.log('✅ Database setup complete');
   })
   .catch(err => {
@@ -206,11 +257,13 @@ const adminRoutes = require('./routes/admin');
 const clientRequestRoutes = require('./routes/clientRequests');
 const pharmacyPurchaseRequestRoutes = require('./routes/pharmacyPurchaseRequests');
 const pharmacySaleRequestRoutes = require('./routes/pharmacySaleRequests');
+const jobApplicationRoutes = require('./routes/jobApplications');
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/client-requests', clientRequestRoutes);
 app.use('/api/pharmacy-purchase-requests', pharmacyPurchaseRequestRoutes);
 app.use('/api/pharmacy-sale-requests', pharmacySaleRequestRoutes);
+app.use('/api/job-applications', jobApplicationRoutes);
 
 app.get('/', (req, res) => {
     res.send('Pharmacy backend running');
