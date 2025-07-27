@@ -215,7 +215,6 @@ db.getConnection()
           refPhone1 VARCHAR(50),
           signature VARCHAR(255) NOT NULL,
           signatureDate DATE NOT NULL,
-          cv VARCHAR(255),
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
