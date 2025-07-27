@@ -14,6 +14,7 @@ async function getAll(req, res) {
 // Create a new job application
 async function create(req, res) {
     try {
+        console.log('Received job application data:', req.body);
         const id = await jobApplicationModel.createJobApplication(req.db, req.body);
         res.status(201).json({ id });
     } catch (err) {
