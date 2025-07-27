@@ -25,33 +25,25 @@ async function create(req, res) {
 // Create a new job application with file upload
 async function createWithFile(req, res) {
     try {
-        // Handle file upload using multer
-        req.upload.single('cv')(req, res, async function(err) {
-            if (err) {
-                console.error('File upload error:', err);
-                return res.status(400).json({ error: err.message });
-            }
+        // Prepare data for database
+        const data = {
+            ...req.body,
+            cv: req.file ? req.file.filename : null
+        };
 
-            // Prepare data for database
-            const data = {
-                ...req.body,
-                cv: req.file ? req.file.filename : null
-            };
+        // Handle arrays for checkboxes and radio groups
+        if (req.body.contactMode) {
+            data.contactMode = Array.isArray(req.body.contactMode) ? req.body.contactMode : [req.body.contactMode];
+        }
+        if (req.body.pharmacyType) {
+            data.pharmacyType = Array.isArray(req.body.pharmacyType) ? req.body.pharmacyType : [req.body.pharmacyType];
+        }
+        if (req.body.skills) {
+            data.skills = Array.isArray(req.body.skills) ? req.body.skills : [req.body.skills];
+        }
 
-            // Handle arrays for checkboxes and radio groups
-            if (req.body.contactMode) {
-                data.contactMode = Array.isArray(req.body.contactMode) ? req.body.contactMode : [req.body.contactMode];
-            }
-            if (req.body.pharmacyType) {
-                data.pharmacyType = Array.isArray(req.body.pharmacyType) ? req.body.pharmacyType : [req.body.pharmacyType];
-            }
-            if (req.body.skills) {
-                data.skills = Array.isArray(req.body.skills) ? req.body.skills : [req.body.skills];
-            }
-
-            const id = await jobApplicationModel.createJobApplication(req.db, data);
-            res.status(201).json({ id });
-        });
+        const id = await jobApplicationModel.createJobApplication(req.db, data);
+        res.status(201).json({ id });
     } catch (err) {
         console.error('Error creating job application with file:', err);
         res.status(500).json({ error: 'Failed to create job application' });
@@ -60,5 +52,6 @@ async function createWithFile(req, res) {
 
 module.exports = {
     getAll,
-    create
+    create,
+    createWithFile
 }; 
