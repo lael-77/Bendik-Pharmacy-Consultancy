@@ -3,8 +3,6 @@ const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
-const multer = require('multer');
-const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -303,51 +301,6 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 app.use(morgan('dev'));
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const fileFilter = (req, file, cb) => {
-  // Accept only PDF, DOC, DOCX files
-  if (file.mimetype === 'application/pdf' || 
-      file.mimetype === 'application/msword' || 
-      file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-    cb(null, true);
-  } else {
-    cb(new Error('Only PDF, DOC, and DOCX files are allowed!'), false);
-  }
-};
-
-const upload = multer({ 
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
-});
-
-// Create uploads directory if it doesn't exist
-const fs = require('fs');
-if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
-}
-
-// Serve uploaded files statically
-app.use('/uploads', express.static('uploads'));
-
-// Attach upload middleware to req
-app.use((req, res, next) => {
-  req.upload = upload;
-  next();
-});
 
 // Attach db to req for controllers
 app.use((req, res, next) => {
