@@ -38,13 +38,12 @@ async function createJobApplication(db, data) {
         refName1,
         refRelation1,
         refPhone1,
-        signature,
         signatureDate
     } = data;
     const [result] = await db.query(
         `INSERT INTO job_applications (
-            fullName, dob, nationality, idNumber, npcNumber, phone, email, contactMode, position, otherPosition, licenseStatus, qualification, institution, graduationYear, experience, pharmacyType, schedule, locationPref, relocate, salaryFrom, salaryTo, startDate, skills, otherSkills, employer1, position1, duration1, reason1, refName1, refRelation1, refPhone1, signature, signatureDate, cv, createdAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            fullName, dob, nationality, idNumber, npcNumber, phone, email, contactMode, position, otherPosition, licenseStatus, qualification, institution, graduationYear, experience, pharmacyType, schedule, locationPref, relocate, salaryFrom, salaryTo, startDate, skills, otherSkills, employer1, position1, duration1, reason1, refName1, refRelation1, refPhone1, signatureDate, cv, createdAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
             fullName,
             dob,
@@ -77,7 +76,6 @@ async function createJobApplication(db, data) {
             refName1,
             refRelation1,
             refPhone1,
-            signature,
             signatureDate,
             null // cv column value
         ]

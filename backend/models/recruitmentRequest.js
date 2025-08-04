@@ -43,13 +43,12 @@ async function createRecruitmentRequest(db, data) {
         training,
         challenges,
         support,
-        signature,
         signatureDate
     } = data;
     const [result] = await db.query(
         `INSERT INTO recruitment_requests (
-            pharmacyName, contactPerson, phone, email, location, type, typeOther, branches, staffCount, position, positionsAvailable, employmentType, startDate, workingHours, salaryFrom, salaryTo, housingTransport, bonus, bonusDetails, qualification, license, experience, language, otherLanguage, additionalSkills, responsibility1, responsibility2, responsibility3, responsibility4, responsibility5, reportingLine, systemUsed, teamStructure, training, challenges, support, signature, signatureDate, createdAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            pharmacyName, contactPerson, phone, email, location, type, typeOther, branches, staffCount, position, positionsAvailable, employmentType, startDate, workingHours, salaryFrom, salaryTo, housingTransport, bonus, bonusDetails, qualification, license, experience, language, otherLanguage, additionalSkills, responsibility1, responsibility2, responsibility3, responsibility4, responsibility5, reportingLine, systemUsed, teamStructure, training, challenges, support, signatureDate, createdAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
             pharmacyName,
             contactPerson,
@@ -87,7 +86,6 @@ async function createRecruitmentRequest(db, data) {
             training,
             challenges,
             Array.isArray(support) ? support.join(',') : support,
-            signature,
             signatureDate
         ]
     );

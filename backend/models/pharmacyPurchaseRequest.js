@@ -27,13 +27,12 @@ async function createPharmacyPurchaseRequest(db, data) {
         supportServices,
         otherServices,
         additionalInfo,
-        clientSignature,
         date
     } = data;
     const [result] = await db.query(
         `INSERT INTO pharmacy_purchase_requests (
-            buyerName, phoneNumber, email, contactMethod, nationalId, tinNumber, pharmacyType, otherType, preferredLocation, operatingArea, businessStatus, ownershipType, minRevenue, budgetRange, budgetFlexible, timeline, insurancePartners, supportServices, otherServices, additionalInfo, clientSignature, date, createdAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            buyerName, phoneNumber, email, contactMethod, nationalId, tinNumber, pharmacyType, otherType, preferredLocation, operatingArea, businessStatus, ownershipType, minRevenue, budgetRange, budgetFlexible, timeline, insurancePartners, supportServices, otherServices, additionalInfo, date, createdAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
             buyerName,
             phoneNumber,
@@ -55,7 +54,6 @@ async function createPharmacyPurchaseRequest(db, data) {
             Array.isArray(supportServices) ? supportServices.join(',') : supportServices,
             otherServices,
             additionalInfo,
-            clientSignature,
             date
         ]
     );
