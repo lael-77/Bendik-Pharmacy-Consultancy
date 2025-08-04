@@ -81,7 +81,6 @@ db.getConnection()
           paymentMode VARCHAR(50) NOT NULL,
           invoicingName VARCHAR(255),
           declaration VARCHAR(10) NOT NULL,
-          signature VARCHAR(255) NOT NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -119,7 +118,6 @@ db.getConnection()
           supportServices TEXT,
           otherServices VARCHAR(255),
           additionalInfo TEXT,
-          clientSignature VARCHAR(255) NOT NULL,
           date DATE NOT NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -163,7 +161,6 @@ db.getConnection()
           valuationService VARCHAR(10),
           additionalInfo TEXT,
           documents TEXT,
-          signature VARCHAR(255) NOT NULL,
           date DATE NOT NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -213,7 +210,6 @@ db.getConnection()
           refName1 VARCHAR(255),
           refRelation1 VARCHAR(100),
           refPhone1 VARCHAR(50),
-          signature VARCHAR(255) NOT NULL,
           signatureDate DATE NOT NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -268,7 +264,6 @@ db.getConnection()
           training VARCHAR(10),
           challenges TEXT,
           support TEXT,
-          signature VARCHAR(255) NOT NULL,
           signatureDate DATE NOT NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
