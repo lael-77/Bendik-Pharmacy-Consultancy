@@ -57,24 +57,83 @@ async function processMtnPayment({ amount, currency, phone }) {
   const BASE_URL = 'https://proxy.momoapi.mtn.com/collection';
   const TARGET_ENV = 'live';
   
-    // For MTN, we'll use a simplified approach with the provided key
-  const referenceId = randomUUID();
-  
-  // Simulate MTN payment with the provided key
-  // In a real implementation, you would use the MTN API with this key
-  console.log(`MTN Payment initiated: ${amount} ${currency} to ${msisdn} with key: ${API_KEY.substring(0, 20)}...`);
-  
-  // Simulate payment processing
-  await delay(2000);
-  
-  // For now, return success (you can modify this based on actual MTN API response)
-  return {
-    status: 'SUCCESS',
-    reference: referenceId,
-  };
+  try {
+    // 1) Get OAuth token using your API key
+    const tokenRes = await fetch(`${BASE_URL}/token/`, {
+      method: 'POST',
+      headers: {
+        'Ocp-Apim-Subscription-Key': API_KEY,
+        'Content-Length': '0',
+      },
+    });
+    
+    if (!tokenRes.ok) {
+      throw new Error(`MTN token failed: ${tokenRes.status}`);
+    }
+    
+    const tokenJson = await tokenRes.json();
+    const accessToken = tokenJson.access_token;
+
+    // 2) Create request to pay - THIS TRIGGERS THE MTN PROMPT
+    const referenceId = randomUUID();
+    const rtpBody = {
+      amount: String(amount),
+      currency,
+      externalId: referenceId,
+      payer: { partyIdType: 'MSISDN', partyId: msisdn },
+      payerMessage: 'BPC Registration Fee',
+      payeeNote: 'BPC',
+    };
+    
+    const rtpRes = await fetch(`${BASE_URL}/v1_0/requesttopay`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'X-Reference-Id': referenceId,
+        'X-Target-Environment': TARGET_ENV,
+        'Ocp-Apim-Subscription-Key': API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(rtpBody),
+    });
+    
+    if (rtpRes.status !== 202) {
+      throw new Error(`MTN request failed: ${rtpRes.status}`);
+    }
+
+    // 3) Poll for payment status - WAIT FOR CLIENT TO CONFIRM
+    let status = 'PENDING';
+    for (let i = 0; i < 10; i++) { // Poll for up to 20 seconds
+      await delay(2000);
+      const statusRes = await fetch(`${BASE_URL}/v1_0/requesttopay/${referenceId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'X-Target-Environment': TARGET_ENV,
+          'Ocp-Apim-Subscription-Key': API_KEY,
+        },
+      });
+      
+      if (statusRes.ok) {
+        const js = await statusRes.json().catch(() => ({}));
+        status = (js.status || '').toUpperCase();
+        console.log(`MTN Payment status: ${status}`);
+        
+        if (status === 'SUCCESSFUL' || status === 'FAILED') break;
+      }
+    }
+    
+    return {
+      status: status === 'SUCCESSFUL' ? 'SUCCESS' : status === 'FAILED' ? 'FAILED' : 'PENDING',
+      reference: referenceId,
+    };
+    
+  } catch (error) {
+    console.error('MTN Payment error:', error);
+    throw error;
+  }
 }
 
-// Airtel Money (LIVE) via REST (no SDK)
+// Airtel Money (LIVE) via REST (no SDK) - Ekash System
 async function processAirtelPayment({ amount, currency, phone }) {
   const msisdn = (phone || DEFAULT_PAYER_MSISDN).replace(/[^0-9]/g, '');
   if (!msisdn) throw new Error('Phone required');
@@ -85,20 +144,94 @@ async function processAirtelPayment({ amount, currency, phone }) {
   const COUNTRY = 'RW';
   const CURRENCY = currency || 'RWF';
   
-  // For Airtel, we'll use a simplified approach with the provided key
-  const reference = randomUUID();
-  
-  // Simulate Airtel payment with the provided key
-  console.log(`Airtel Payment initiated: ${amount} ${currency} to ${msisdn} with key: ${API_KEY.substring(0, 20)}...`);
-  
-  // Simulate payment processing
-  await delay(2000);
-  
-  // For now, return success (you can modify this based on actual Airtel API response)
-  return { 
-    status: 'SUCCESS', 
-    reference 
-  };
+  try {
+    // 1) Get OAuth token using your API key
+    const authRes = await fetch(`${BASE_URL}/auth/oauth2/token`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-API-Key': API_KEY
+      },
+      body: JSON.stringify({ 
+        client_id: API_KEY,
+        client_secret: API_KEY,
+        grant_type: 'client_credentials' 
+      }),
+    });
+    
+    if (!authRes.ok) {
+      throw new Error(`Airtel auth failed: ${authRes.status}`);
+    }
+    
+    const authJson = await authRes.json();
+    const accessToken = authJson.access_token;
+
+    // 2) Initiate payment - THIS TRIGGERS THE AIRTEL EKASH PROMPT
+    const reference = randomUUID();
+    const payBody = {
+      reference,
+      subscriber: { 
+        country: COUNTRY, 
+        currency: CURRENCY, 
+        msisdn 
+      },
+      transaction: { 
+        amount: String(amount), 
+        country: COUNTRY, 
+        currency: CURRENCY 
+      },
+    };
+    
+    const payRes = await fetch(`${BASE_URL}/merchant/v1/payments`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'X-Country': COUNTRY,
+        'X-Currency': CURRENCY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payBody),
+    });
+    
+    if (!payRes.ok) {
+      throw new Error(`Airtel payment failed: ${payRes.status}`);
+    }
+    
+    const payJson = await payRes.json().catch(() => ({}));
+    console.log('Airtel payment response:', payJson);
+
+    // 3) Poll for payment status - WAIT FOR CLIENT TO CONFIRM
+    let status = 'PENDING';
+    for (let i = 0; i < 10; i++) { // Poll for up to 20 seconds
+      await delay(2000);
+      
+      const statusRes = await fetch(`${BASE_URL}/merchant/v1/payments/${reference}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'X-Country': COUNTRY,
+          'X-Currency': CURRENCY,
+        },
+      });
+      
+      if (statusRes.ok) {
+        const statusJson = await statusRes.json().catch(() => ({}));
+        const resultCode = statusJson?.status?.result_code || statusJson?.data?.status?.result_code;
+        status = resultCode === '000' ? 'SUCCESS' : resultCode ? 'FAILED' : 'PENDING';
+        console.log(`Airtel Payment status: ${status} (${resultCode})`);
+        
+        if (status === 'SUCCESS' || status === 'FAILED') break;
+      }
+    }
+    
+    return { 
+      status: status === 'SUCCESS' ? 'SUCCESS' : status === 'FAILED' ? 'FAILED' : 'PENDING', 
+      reference 
+    };
+    
+  } catch (error) {
+    console.error('Airtel Payment error:', error);
+    throw error;
+  }
 }
 
 async function processCardPayment({ amount, currency, cardToken }) {
