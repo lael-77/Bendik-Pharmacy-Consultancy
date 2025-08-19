@@ -57,8 +57,12 @@ async function processMtnPayment({ amount, currency, phone }) {
   const BASE_URL = 'https://proxy.momoapi.mtn.com/collection';
   const TARGET_ENV = 'live';
   
+  console.log(`🔍 MTN Payment Debug: Amount=${amount}, Currency=${currency}, Phone=${msisdn}`);
+  console.log(`🔍 MTN API Key: ${API_KEY.substring(0, 20)}...`);
+  
   try {
     // 1) Get OAuth token using your API key
+    console.log('🔍 Step 1: Getting MTN OAuth token...');
     const tokenRes = await fetch(`${BASE_URL}/token/`, {
       method: 'POST',
       headers: {
@@ -67,14 +71,20 @@ async function processMtnPayment({ amount, currency, phone }) {
       },
     });
     
+    console.log(`🔍 MTN Token Response Status: ${tokenRes.status}`);
+    
     if (!tokenRes.ok) {
-      throw new Error(`MTN token failed: ${tokenRes.status}`);
+      const errorText = await tokenRes.text().catch(() => 'Unknown error');
+      console.error(`🔍 MTN Token Error: ${errorText}`);
+      throw new Error(`MTN token failed: ${tokenRes.status} - ${errorText}`);
     }
     
     const tokenJson = await tokenRes.json();
     const accessToken = tokenJson.access_token;
+    console.log(`🔍 MTN Access Token: ${accessToken.substring(0, 20)}...`);
 
     // 2) Create request to pay - THIS TRIGGERS THE MTN PROMPT
+    console.log('🔍 Step 2: Creating MTN payment request...');
     const referenceId = randomUUID();
     const rtpBody = {
       amount: String(amount),
@@ -84,6 +94,8 @@ async function processMtnPayment({ amount, currency, phone }) {
       payerMessage: 'BPC Registration Fee',
       payeeNote: 'BPC',
     };
+    
+    console.log(`🔍 MTN Request Body:`, JSON.stringify(rtpBody, null, 2));
     
     const rtpRes = await fetch(`${BASE_URL}/v1_0/requesttopay`, {
       method: 'POST',
@@ -97,14 +109,22 @@ async function processMtnPayment({ amount, currency, phone }) {
       body: JSON.stringify(rtpBody),
     });
     
+    console.log(`🔍 MTN Payment Response Status: ${rtpRes.status}`);
+    
     if (rtpRes.status !== 202) {
-      throw new Error(`MTN request failed: ${rtpRes.status}`);
+      const errorText = await rtpRes.text().catch(() => 'Unknown error');
+      console.error(`🔍 MTN Payment Error: ${errorText}`);
+      throw new Error(`MTN request failed: ${rtpRes.status} - ${errorText}`);
     }
+
+    console.log('🔍 Step 3: MTN payment request sent successfully! Check your phone for prompt...');
 
     // 3) Poll for payment status - WAIT FOR CLIENT TO CONFIRM
     let status = 'PENDING';
     for (let i = 0; i < 10; i++) { // Poll for up to 20 seconds
       await delay(2000);
+      console.log(`🔍 Polling MTN status (attempt ${i + 1}/10)...`);
+      
       const statusRes = await fetch(`${BASE_URL}/v1_0/requesttopay/${referenceId}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -116,9 +136,11 @@ async function processMtnPayment({ amount, currency, phone }) {
       if (statusRes.ok) {
         const js = await statusRes.json().catch(() => ({}));
         status = (js.status || '').toUpperCase();
-        console.log(`MTN Payment status: ${status}`);
+        console.log(`🔍 MTN Payment status: ${status}`, js);
         
         if (status === 'SUCCESSFUL' || status === 'FAILED') break;
+      } else {
+        console.log(`🔍 MTN Status check failed: ${statusRes.status}`);
       }
     }
     
@@ -128,7 +150,7 @@ async function processMtnPayment({ amount, currency, phone }) {
     };
     
   } catch (error) {
-    console.error('MTN Payment error:', error);
+    console.error('🔍 MTN Payment error:', error);
     throw error;
   }
 }
@@ -144,8 +166,12 @@ async function processAirtelPayment({ amount, currency, phone }) {
   const COUNTRY = 'RW';
   const CURRENCY = currency || 'RWF';
   
+  console.log(`🔍 Airtel Payment Debug: Amount=${amount}, Currency=${currency}, Phone=${msisdn}`);
+  console.log(`🔍 Airtel API Key: ${API_KEY.substring(0, 20)}...`);
+  
   try {
     // 1) Get OAuth token using your API key
+    console.log('🔍 Step 1: Getting Airtel OAuth token...');
     const authRes = await fetch(`${BASE_URL}/auth/oauth2/token`, {
       method: 'POST',
       headers: { 
@@ -159,14 +185,20 @@ async function processAirtelPayment({ amount, currency, phone }) {
       }),
     });
     
+    console.log(`🔍 Airtel Auth Response Status: ${authRes.status}`);
+    
     if (!authRes.ok) {
-      throw new Error(`Airtel auth failed: ${authRes.status}`);
+      const errorText = await authRes.text().catch(() => 'Unknown error');
+      console.error(`🔍 Airtel Auth Error: ${errorText}`);
+      throw new Error(`Airtel auth failed: ${authRes.status} - ${errorText}`);
     }
     
     const authJson = await authRes.json();
     const accessToken = authJson.access_token;
+    console.log(`🔍 Airtel Access Token: ${accessToken.substring(0, 20)}...`);
 
     // 2) Initiate payment - THIS TRIGGERS THE AIRTEL EKASH PROMPT
+    console.log('🔍 Step 2: Creating Airtel payment request...');
     const reference = randomUUID();
     const payBody = {
       reference,
@@ -182,6 +214,8 @@ async function processAirtelPayment({ amount, currency, phone }) {
       },
     };
     
+    console.log(`🔍 Airtel Request Body:`, JSON.stringify(payBody, null, 2));
+    
     const payRes = await fetch(`${BASE_URL}/merchant/v1/payments`, {
       method: 'POST',
       headers: {
@@ -193,17 +227,24 @@ async function processAirtelPayment({ amount, currency, phone }) {
       body: JSON.stringify(payBody),
     });
     
+    console.log(`🔍 Airtel Payment Response Status: ${payRes.status}`);
+    
     if (!payRes.ok) {
-      throw new Error(`Airtel payment failed: ${payRes.status}`);
+      const errorText = await payRes.text().catch(() => 'Unknown error');
+      console.error(`🔍 Airtel Payment Error: ${errorText}`);
+      throw new Error(`Airtel payment failed: ${payRes.status} - ${errorText}`);
     }
     
     const payJson = await payRes.json().catch(() => ({}));
-    console.log('Airtel payment response:', payJson);
+    console.log('🔍 Airtel payment response:', payJson);
+
+    console.log('🔍 Step 3: Airtel payment request sent successfully! Check your phone for prompt...');
 
     // 3) Poll for payment status - WAIT FOR CLIENT TO CONFIRM
     let status = 'PENDING';
     for (let i = 0; i < 10; i++) { // Poll for up to 20 seconds
       await delay(2000);
+      console.log(`🔍 Polling Airtel status (attempt ${i + 1}/10)...`);
       
       const statusRes = await fetch(`${BASE_URL}/merchant/v1/payments/${reference}`, {
         headers: {
@@ -217,9 +258,11 @@ async function processAirtelPayment({ amount, currency, phone }) {
         const statusJson = await statusRes.json().catch(() => ({}));
         const resultCode = statusJson?.status?.result_code || statusJson?.data?.status?.result_code;
         status = resultCode === '000' ? 'SUCCESS' : resultCode ? 'FAILED' : 'PENDING';
-        console.log(`Airtel Payment status: ${status} (${resultCode})`);
+        console.log(`🔍 Airtel Payment status: ${status} (${resultCode})`, statusJson);
         
         if (status === 'SUCCESS' || status === 'FAILED') break;
+      } else {
+        console.log(`🔍 Airtel Status check failed: ${statusRes.status}`);
       }
     }
     
@@ -229,7 +272,7 @@ async function processAirtelPayment({ amount, currency, phone }) {
     };
     
   } catch (error) {
-    console.error('Airtel Payment error:', error);
+    console.error('🔍 Airtel Payment error:', error);
     throw error;
   }
 }
