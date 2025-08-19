@@ -271,6 +271,29 @@ db.getConnection()
     }
   })
   .then(() => {
+    // Check if payments table exists
+    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'payments'", [process.env.DB_NAME]);
+  })
+  .then(([rows]) => {
+    if (rows[0].count > 0) {
+      console.log('✅ payments table exists');
+    } else {
+      console.log('❌ payments table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE payments (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          method VARCHAR(50) NOT NULL,
+          amount DECIMAL(18,2) NOT NULL,
+          currency VARCHAR(10) NOT NULL,
+          phone VARCHAR(50),
+          cardRef VARCHAR(255),
+          status VARCHAR(50) NOT NULL,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
+  .then(() => {
     console.log('✅ Database setup complete');
   })
   .catch(err => {
@@ -308,6 +331,7 @@ const pharmacyPurchaseRequestRoutes = require('./routes/pharmacyPurchaseRequests
 const pharmacySaleRequestRoutes = require('./routes/pharmacySaleRequests');
 const jobApplicationRoutes = require('./routes/jobApplications');
 const recruitmentRequestRoutes = require('./routes/recruitmentRequests');
+const paymentRoutes = require('./routes/payments');
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/client-requests', clientRequestRoutes);
@@ -315,6 +339,7 @@ app.use('/api/pharmacy-purchase-requests', pharmacyPurchaseRequestRoutes);
 app.use('/api/pharmacy-sale-requests', pharmacySaleRequestRoutes);
 app.use('/api/job-applications', jobApplicationRoutes);
 app.use('/api/recruitment-requests', recruitmentRequestRoutes);
+app.use('/api/pay', paymentRoutes);
 
 app.get('/', (req, res) => {
     res.send('Pharmacy backend running');
