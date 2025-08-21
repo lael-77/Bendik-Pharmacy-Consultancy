@@ -1,21 +1,26 @@
 const express = require('express');
 const { randomUUID } = require('crypto');
+// Ensure fetch exists (Node 18+). If not, use node-fetch via dynamic import in CJS.
+let fetchFn;
+// eslint-disable-next-line no-undef
+if (typeof fetch !== 'undefined') {
+  // eslint-disable-next-line no-undef
+  fetchFn = fetch;
+} else {
+  fetchFn = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
+}
 const router = express.Router();
 
-// Static API keys provided (consider moving to env var in production)
-const PAYMENT_KEY_MTN = process.env.PAY_KEY_MTN || 'eGx562IiN7y31CmZCnYgFerDPVN+RuGthpAkpawB58pUrEvZm+bEePUVLWHpsgIEvMCIHDIS0ygoZucUtSaEdA==';
-const PAYMENT_KEY_AIRTEL = process.env.PAY_KEY_AIRTEL || 'eGx562IiN7y31CmZCnYgFWP6klUZxlfCIBWYUsiETtNxlt9+LkWIb/DOC/iL8133G8zkBUIvPXwHWB00j5lMIA==';
-const PAYMENT_KEY_CARD = process.env.PAY_KEY_CARD || 'eGx562IiN7y31CmZCnYgFTHI4tl+adwa/+OkptwzzWbBWHsSHMAgIetQkqLBkSjtyQ8QPcRmBB4xs29dfynTrQ==';
+// ITEC Pay provider-specific API keys and base URLs
+const ITEC_MTN_API_KEY = process.env.ITEC_MTN_API_KEY || '';
+const ITEC_MTN_BASE_URL = process.env.ITEC_MTN_BASE_URL || 'https://api.itecpay.com';
+const ITEC_AIRTEL_API_KEY = process.env.ITEC_AIRTEL_API_KEY || '';
+const ITEC_AIRTEL_BASE_URL = process.env.ITEC_AIRTEL_BASE_URL || 'https://api.itecpay.com';
 
-function requireApiKey(expectedKey) {
-  return (req, res, next) => {
-    const apiKey = req.header('X-Api-Key');
-    if (!apiKey || apiKey !== expectedKey) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    next();
-  };
-}
+// Card remains stubbed
+const PAYMENT_KEY_CARD = process.env.PAY_KEY_CARD || 'stub-card-key';
+
+// Remove frontend-provided secret requirement. Keep a lightweight throttle or captcha externally if needed.
 
 // Fixed server-side pricing per form purpose (RWF)
 const FORM_AMOUNTS_RWF = Object.freeze({
@@ -47,234 +52,130 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 // Default MSISDN to charge if not provided from frontend
 const DEFAULT_PAYER_MSISDN = (process.env.DEFAULT_PAYER_MSISDN || '250796690160').replace(/[^0-9]/g, '');
 
-// MTN MoMo Collections (LIVE) via REST (no SDK)
+// MTN mobile money via ITEC Pay (LIVE)
 async function processMtnPayment({ amount, currency, phone }) {
   const msisdn = (phone || DEFAULT_PAYER_MSISDN).replace(/[^0-9]/g, '');
   if (!msisdn) throw new Error('Phone required');
-  
-  // Use the provided API key directly
-  const API_KEY = PAYMENT_KEY_MTN;
-  const BASE_URL = 'https://proxy.momoapi.mtn.com/collection';
-  const TARGET_ENV = 'live';
-  
-  console.log(`🔍 MTN Payment Debug: Amount=${amount}, Currency=${currency}, Phone=${msisdn}`);
-  console.log(`🔍 MTN API Key: ${API_KEY.substring(0, 20)}...`);
-  
+  console.log(`🔍 ITEC MTN Payment: Amount=${amount}, Currency=${currency}, Phone=${msisdn}`);
   try {
-    // 1) Get OAuth token using your API key
-    console.log('🔍 Step 1: Getting MTN OAuth token...');
-    const tokenRes = await fetch(`${BASE_URL}/token/`, {
+    const body = { provider: 'MTN', msisdn, amount: String(amount), currency };
+    const initRes = await fetchFn(`${ITEC_BASE_URL}/mobile/collect`, {
       method: 'POST',
-      headers: {
-        'Ocp-Apim-Subscription-Key': API_KEY,
-        'Content-Length': '0',
-      },
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': ITEC_API_KEY },
+      body: JSON.stringify(body),
     });
-    
-    console.log(`🔍 MTN Token Response Status: ${tokenRes.status}`);
-    
-    if (!tokenRes.ok) {
-      const errorText = await tokenRes.text().catch(() => 'Unknown error');
-      console.error(`🔍 MTN Token Error: ${errorText}`);
-      throw new Error(`MTN token failed: ${tokenRes.status} - ${errorText}`);
+    if (!initRes.ok && initRes.status !== 202) {
+      const errorText = await initRes.text().catch(() => 'Unknown error');
+      throw new Error(`ITEC MTN init failed: ${initRes.status} - ${errorText}`);
     }
-    
-    const tokenJson = await tokenRes.json();
-    const accessToken = tokenJson.access_token;
-    console.log(`🔍 MTN Access Token: ${accessToken.substring(0, 20)}...`);
-
-    // 2) Create request to pay - THIS TRIGGERS THE MTN PROMPT
-    console.log('🔍 Step 2: Creating MTN payment request...');
-    const referenceId = randomUUID();
-    const rtpBody = {
-      amount: String(amount),
-      currency,
-      externalId: referenceId,
-      payer: { partyIdType: 'MSISDN', partyId: msisdn },
-      payerMessage: 'BPC Registration Fee',
-      payeeNote: 'BPC',
-    };
-    
-    console.log(`🔍 MTN Request Body:`, JSON.stringify(rtpBody, null, 2));
-    
-    const rtpRes = await fetch(`${BASE_URL}/v1_0/requesttopay`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'X-Reference-Id': referenceId,
-        'X-Target-Environment': TARGET_ENV,
-        'Ocp-Apim-Subscription-Key': API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(rtpBody),
-    });
-    
-    console.log(`🔍 MTN Payment Response Status: ${rtpRes.status}`);
-    
-    if (rtpRes.status !== 202) {
-      const errorText = await rtpRes.text().catch(() => 'Unknown error');
-      console.error(`🔍 MTN Payment Error: ${errorText}`);
-      throw new Error(`MTN request failed: ${rtpRes.status} - ${errorText}`);
-    }
-
-    console.log('🔍 Step 3: MTN payment request sent successfully! Check your phone for prompt...');
-
-    // 3) Poll for payment status - WAIT FOR CLIENT TO CONFIRM
+    const initJson = await initRes.json().catch(() => ({}));
+    const reference = initJson.reference || initJson.transactionId || randomUUID();
     let status = 'PENDING';
-    for (let i = 0; i < 10; i++) { // Poll for up to 20 seconds
+    for (let i = 0; i < 10; i++) {
       await delay(2000);
-      console.log(`🔍 Polling MTN status (attempt ${i + 1}/10)...`);
-      
-      const statusRes = await fetch(`${BASE_URL}/v1_0/requesttopay/${referenceId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'X-Target-Environment': TARGET_ENV,
-          'Ocp-Apim-Subscription-Key': API_KEY,
-        },
-      });
-      
+      const statusRes = await fetchFn(`${ITEC_BASE_URL}/mobile/status/${reference}`, { headers: { 'X-API-Key': ITEC_API_KEY } });
       if (statusRes.ok) {
         const js = await statusRes.json().catch(() => ({}));
-        status = (js.status || '').toUpperCase();
-        console.log(`🔍 MTN Payment status: ${status}`, js);
-        
-        if (status === 'SUCCESSFUL' || status === 'FAILED') break;
-      } else {
-        console.log(`🔍 MTN Status check failed: ${statusRes.status}`);
+        const s = (js.status || js.result || '').toString().toUpperCase();
+        if (s.includes('SUCCESS')) { status = 'SUCCESS'; break; }
+        if (s.includes('FAIL')) { status = 'FAILED'; break; }
       }
     }
-    
-    return {
-      status: status === 'SUCCESSFUL' ? 'SUCCESS' : status === 'FAILED' ? 'FAILED' : 'PENDING',
-      reference: referenceId,
-    };
-    
+    return { status, reference };
   } catch (error) {
-    console.error('🔍 MTN Payment error:', error);
+    console.error('🔍 ITEC MTN error:', error);
     throw error;
   }
 }
 
-// Airtel Money (LIVE) via REST (no SDK) - Ekash System
+// Airtel Money via ITEC Pay (LIVE)
 async function processAirtelPayment({ amount, currency, phone }) {
   const msisdn = (phone || DEFAULT_PAYER_MSISDN).replace(/[^0-9]/g, '');
   if (!msisdn) throw new Error('Phone required');
-  
-  // Use the provided API key directly
-  const API_KEY = PAYMENT_KEY_AIRTEL;
-  const BASE_URL = 'https://openapi.airtel.africa';
-  const COUNTRY = 'RW';
-  const CURRENCY = currency || 'RWF';
-  
-  console.log(`🔍 Airtel Payment Debug: Amount=${amount}, Currency=${currency}, Phone=${msisdn}`);
-  console.log(`🔍 Airtel API Key: ${API_KEY.substring(0, 20)}...`);
-  
+  console.log(`🔍 ITEC Airtel Payment: Amount=${amount}, Currency=${currency}, Phone=${msisdn}`);
   try {
-    // 1) Get OAuth token using your API key
-    console.log('🔍 Step 1: Getting Airtel OAuth token...');
-    const authRes = await fetch(`${BASE_URL}/auth/oauth2/token`, {
+    const body = { provider: 'AIRTEL', msisdn, amount: String(amount), currency };
+    const initRes = await fetchFn(`${ITEC_BASE_URL}/mobile/collect`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-API-Key': API_KEY
-      },
-      body: JSON.stringify({ 
-        client_id: API_KEY,
-        client_secret: API_KEY,
-        grant_type: 'client_credentials' 
-      }),
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': ITEC_API_KEY },
+      body: JSON.stringify(body),
     });
-    
-    console.log(`🔍 Airtel Auth Response Status: ${authRes.status}`);
-    
-    if (!authRes.ok) {
-      const errorText = await authRes.text().catch(() => 'Unknown error');
-      console.error(`🔍 Airtel Auth Error: ${errorText}`);
-      throw new Error(`Airtel auth failed: ${authRes.status} - ${errorText}`);
+    if (!initRes.ok && initRes.status !== 202) {
+      const errorText = await initRes.text().catch(() => 'Unknown error');
+      throw new Error(`ITEC Airtel init failed: ${initRes.status} - ${errorText}`);
     }
-    
-    const authJson = await authRes.json();
-    const accessToken = authJson.access_token;
-    console.log(`🔍 Airtel Access Token: ${accessToken.substring(0, 20)}...`);
-
-    // 2) Initiate payment - THIS TRIGGERS THE AIRTEL EKASH PROMPT
-    console.log('🔍 Step 2: Creating Airtel payment request...');
-    const reference = randomUUID();
-    const payBody = {
-      reference,
-      subscriber: { 
-        country: COUNTRY, 
-        currency: CURRENCY, 
-        msisdn 
-      },
-      transaction: { 
-        amount: String(amount), 
-        country: COUNTRY, 
-        currency: CURRENCY 
-      },
-    };
-    
-    console.log(`🔍 Airtel Request Body:`, JSON.stringify(payBody, null, 2));
-    
-    const payRes = await fetch(`${BASE_URL}/merchant/v1/payments`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'X-Country': COUNTRY,
-        'X-Currency': CURRENCY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payBody),
-    });
-    
-    console.log(`🔍 Airtel Payment Response Status: ${payRes.status}`);
-    
-    if (!payRes.ok) {
-      const errorText = await payRes.text().catch(() => 'Unknown error');
-      console.error(`🔍 Airtel Payment Error: ${errorText}`);
-      throw new Error(`Airtel payment failed: ${payRes.status} - ${errorText}`);
-    }
-    
-    const payJson = await payRes.json().catch(() => ({}));
-    console.log('🔍 Airtel payment response:', payJson);
-
-    console.log('🔍 Step 3: Airtel payment request sent successfully! Check your phone for prompt...');
-
-    // 3) Poll for payment status - WAIT FOR CLIENT TO CONFIRM
+    const initJson = await initRes.json().catch(() => ({}));
+    const reference = initJson.reference || initJson.transactionId || randomUUID();
     let status = 'PENDING';
-    for (let i = 0; i < 10; i++) { // Poll for up to 20 seconds
+    for (let i = 0; i < 10; i++) {
       await delay(2000);
-      console.log(`🔍 Polling Airtel status (attempt ${i + 1}/10)...`);
-      
-      const statusRes = await fetch(`${BASE_URL}/merchant/v1/payments/${reference}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'X-Country': COUNTRY,
-          'X-Currency': CURRENCY,
-        },
-      });
-      
+      const statusRes = await fetchFn(`${ITEC_BASE_URL}/mobile/status/${reference}`, { headers: { 'X-API-Key': ITEC_API_KEY } });
       if (statusRes.ok) {
-        const statusJson = await statusRes.json().catch(() => ({}));
-        const resultCode = statusJson?.status?.result_code || statusJson?.data?.status?.result_code;
-        status = resultCode === '000' ? 'SUCCESS' : resultCode ? 'FAILED' : 'PENDING';
-        console.log(`🔍 Airtel Payment status: ${status} (${resultCode})`, statusJson);
-        
-        if (status === 'SUCCESS' || status === 'FAILED') break;
-      } else {
-        console.log(`🔍 Airtel Status check failed: ${statusRes.status}`);
+        const js = await statusRes.json().catch(() => ({}));
+        const s = (js.status || js.result || '').toString().toUpperCase();
+        if (s.includes('SUCCESS')) { status = 'SUCCESS'; break; }
+        if (s.includes('FAIL')) { status = 'FAILED'; break; }
       }
     }
-    
-    return { 
-      status: status === 'SUCCESS' ? 'SUCCESS' : status === 'FAILED' ? 'FAILED' : 'PENDING', 
-      reference 
-    };
-    
+    return { status, reference };
   } catch (error) {
-    console.error('🔍 Airtel Payment error:', error);
+    console.error('🔍 ITEC Airtel error:', error);
     throw error;
   }
+}
+
+// ITEC Pay generic mobile money payment using a single API key header
+async function processItecPayment({ amount, currency, phone, provider }) {
+  const msisdn = (phone || DEFAULT_PAYER_MSISDN).replace(/[^0-9]/g, '');
+  if (!msisdn) throw new Error('Phone required');
+  const upper = String(provider || '').toUpperCase();
+  const apiKey = upper === 'MTN' ? ITEC_MTN_API_KEY : upper === 'AIRTEL' ? ITEC_AIRTEL_API_KEY : '';
+  const baseUrl = upper === 'MTN' ? ITEC_MTN_BASE_URL : upper === 'AIRTEL' ? ITEC_AIRTEL_BASE_URL : '';
+  if (!apiKey) throw new Error(`Missing ITEC API key for ${upper}`);
+  if (!baseUrl) throw new Error(`Missing ITEC base URL for ${upper}`);
+
+  const initBody = {
+    amount: String(amount),
+    currency: currency || 'RWF',
+    msisdn,
+    provider: String(provider || '').toUpperCase(),
+    description: 'BPC Registration Fee'
+  };
+
+  // 1) Initiate payment prompt
+  const initRes = await fetchFn(`${baseUrl}/payments/mobile`, {
+    method: 'POST',
+    headers: {
+      'X-API-Key': apiKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(initBody),
+  });
+
+  if (!initRes.ok) {
+    const errText = await initRes.text().catch(() => 'Unknown error');
+    throw new Error(`ITEC init failed: ${initRes.status} - ${errText}`);
+  }
+
+  const initJson = await initRes.json().catch(() => ({}));
+  const reference = initJson.reference || initJson.id || initJson.txnId || randomUUID();
+
+  // 2) Poll for status (short window)
+  let status = 'PENDING';
+  for (let i = 0; i < 10; i++) {
+    await delay(2000);
+    const stRes = await fetchFn(`${baseUrl}/payments/${reference}`, {
+      headers: { 'X-API-Key': apiKey },
+    });
+    if (stRes.ok) {
+      const stJson = await stRes.json().catch(() => ({}));
+      const code = (stJson.status || stJson.state || '').toString().toUpperCase();
+      status = code.includes('SUCCESS') || code === '000' ? 'SUCCESS' : code.includes('FAIL') ? 'FAILED' : 'PENDING';
+      if (status !== 'PENDING') break;
+    }
+  }
+
+  return { status, reference };
 }
 
 async function processCardPayment({ amount, currency, cardToken }) {
@@ -297,13 +198,13 @@ async function processCardPayment({ amount, currency, cardToken }) {
   };
 }
 
-router.post('/mtn', requireApiKey(PAYMENT_KEY_MTN), async (req, res) => {
+router.post('/mtn', async (req, res) => {
   try {
     const { purpose, phone } = req.body || {};
     const settings = getPaymentSettings(purpose);
     if (!settings) return res.status(400).json({ error: 'Invalid purpose' });
     const { amount, currency } = settings;
-    const result = await processMtnPayment({ amount, currency, phone });
+    const result = await processItecPayment({ amount, currency, phone, provider: 'MTN' });
     const id = await createPayment(req.db, { method: 'MTN', amount, currency, phone: (phone || DEFAULT_PAYER_MSISDN), status: result.status, cardRef: null });
     return res.json({ paymentId: id, status: result.status });
   } catch (err) {
@@ -311,13 +212,13 @@ router.post('/mtn', requireApiKey(PAYMENT_KEY_MTN), async (req, res) => {
   }
 });
 
-router.post('/airtel', requireApiKey(PAYMENT_KEY_AIRTEL), async (req, res) => {
+router.post('/airtel', async (req, res) => {
   try {
     const { purpose, phone } = req.body || {};
     const settings = getPaymentSettings(purpose);
     if (!settings) return res.status(400).json({ error: 'Invalid purpose' });
     const { amount, currency } = settings;
-    const result = await processAirtelPayment({ amount, currency, phone });
+    const result = await processItecPayment({ amount, currency, phone, provider: 'AIRTEL' });
     const id = await createPayment(req.db, { method: 'AIRTEL', amount, currency, phone: (phone || DEFAULT_PAYER_MSISDN), status: result.status, cardRef: null });
     return res.json({ paymentId: id, status: result.status });
   } catch (err) {
@@ -325,7 +226,7 @@ router.post('/airtel', requireApiKey(PAYMENT_KEY_AIRTEL), async (req, res) => {
   }
 });
 
-router.post('/card', requireApiKey(PAYMENT_KEY_CARD), async (req, res) => {
+router.post('/card', async (req, res) => {
   try {
     const { purpose, cardToken } = req.body || {};
     const settings = getPaymentSettings(purpose);
