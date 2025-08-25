@@ -218,6 +218,110 @@ async function processCardPayment({ amount, currency, cardToken }) {
   }
 }
 
+import express from "express";
+import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
+import dotenv from "dotenv";
+
+dotenv.config();
+const router = express.Router();
+
+// ITEC Config
+const ITEC_BASE_URL = process.env.ITEC_MTN_BASE_URL; // e.g. https://sandbox.itec.rw/mtn
+const ITEC_API_KEY = process.env.ITEC_MTN_API_KEY;   // Your ITEC API key
+
+//-------------------------------------------
+// 1. Request Payment from MTN via ITEC
+//-------------------------------------------
+router.post("/mtn", async (req, res) => {
+  try {
+    const {
+      purpose,
+      amount,
+      currency,
+      externalId,
+      payerMessage,
+      payeeNote,
+      phone,
+    } = req.body || {};
+
+    // Validate required fields
+    if (!purpose || !amount || !currency || !phone) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Format phone to MSISDN format (2507xxxxxxx)
+    const phoneNumber = phone.startsWith("250")
+      ? phone
+      : "250" + phone.replace(/^0/, "");
+
+    // Unique transaction reference
+    const referenceId = externalId || uuidv4();
+
+    // Payload for ITEC MTN API
+    const paymentPayload = {
+      amount,
+      currency,
+      externalId: referenceId,
+      payer: {
+        partyIdType: "MSISDN",
+        partyId: phoneNumber,
+      },
+      payerMessage: payerMessage || "Pharmacy purchase",
+      payeeNote: payeeNote || "Payment for consultation",
+    };
+
+    // Send request to ITEC
+    const response = await axios.post(
+      `${ITEC_MTN_BASE_URL}/collection/v1_0/requesttopay`,
+      paymentPayload,
+      {
+        headers: {
+          "Authorization": `Bearer ${ITEC_MTN_API_KEY}`,
+          "X-Reference-Id": referenceId,
+          "X-Target-Environment": "production", // or "sandbox"
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return res.json({
+      status: "pending",
+      message: "Payment request sent to MTN via ITEC",
+      referenceId,
+      payload: paymentPayload,
+      itecResponse: response.data,
+    });
+  } catch (err) {
+    console.error("MTN Payment error:", err.response?.data || err.message);
+    return res.status(500).json({
+      error: "Payment failed",
+      details: err.response?.data || err.message,
+    });
+  }
+});
+
+//-------------------------------------------
+// 2. Callback URL for MTN/ITEC
+//-------------------------------------------
+router.post("/mtn/callback", async (req, res) => {
+  try {
+    const { referenceId, status, amount, currency, payer } = req.body;
+
+    console.log("✅ MTN Callback received:", req.body);
+
+    // TODO: Update your database here
+    // Example:
+    // await Order.updateOne({ referenceId }, { status });
+
+    res.status(200).json({ message: "Callback received successfully" });
+  } catch (err) {
+    console.error("Callback error:", err.message);
+    res.status(500).json({ error: "Failed to process callback" });
+  }
+});
+
+
 router.post('/mtn', async (req, res) => {
   try {
     const { purpose, phone } = req.body || {};
