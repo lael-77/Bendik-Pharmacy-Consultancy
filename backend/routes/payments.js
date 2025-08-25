@@ -59,7 +59,7 @@ async function processMtnPayment({ amount, currency, phone }) {
   console.log(`🔍 ITEC MTN Payment: Amount=${amount}, Currency=${currency}, Phone=${msisdn}`);
   try {
     const body = { provider: 'MTN', msisdn, amount: String(amount), currency };
-    const initRes = await fetchFn(`${https://pay.itecpay.rw/api/pay}/mobile/collect`, {
+    const initRes = await fetchFn(`https://pay.itecpay.rw/api/pay/mobile/collect`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': ITEC_MTN_API_KEY },
       body: JSON.stringify(body),
@@ -73,7 +73,7 @@ async function processMtnPayment({ amount, currency, phone }) {
     let status = 'PENDING';
     for (let i = 0; i < 10; i++) {
       await delay(2000);
-      const statusRes = await fetchFn(`${https://pay.itecpay.rw/api/pay}/mobile/status/${reference}`, { headers: { 'X-API-Key': ITEC_MTN_API_KEY } });
+      const statusRes = await fetchFn(`https://pay.itecpay.rw/api/pay/mobile/status/${reference}`, { headers: { 'X-API-Key': ITEC_MTN_API_KEY } });
       if (statusRes.ok) {
         const js = await statusRes.json().catch(() => ({}));
         const s = (js.status || js.result || '').toString().toUpperCase();
@@ -95,7 +95,7 @@ async function processAirtelPayment({ amount, currency, phone }) {
   console.log(`🔍 ITEC Airtel Payment: Amount=${amount}, Currency=${currency}, Phone=${msisdn}`);
   try {
     const body = { provider: 'AIRTEL', msisdn, amount: String(amount), currency };
-    const initRes = await fetchFn(`${https://pay.itecpay.rw/api/pay}/mobile/collect`, {
+    const initRes = await fetchFn(`https://pay.itecpay.rw/api/pay/mobile/collect`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': ITEC_AIRTEL_API_KEY },
       body: JSON.stringify(body),
@@ -109,7 +109,7 @@ async function processAirtelPayment({ amount, currency, phone }) {
     let status = 'PENDING';
     for (let i = 0; i < 10; i++) {
       await delay(2000);
-      const statusRes = await fetchFn(`${https://pay.itecpay.rw/api/pay}/mobile/status/${reference}`, { headers: { 'X-API-Key': ITEC_MTN_API_KEY } });
+      const statusRes = await fetchFn(`https://pay.itecpay.rw/api/pay/mobile/status/${reference}`, { headers: { 'X-API-Key': ITEC_AIRTEL_API_KEY } });
       if (statusRes.ok) {
         const js = await statusRes.json().catch(() => ({}));
         const s = (js.status || js.result || '').toString().toUpperCase();
