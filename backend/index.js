@@ -312,8 +312,7 @@ app.use(cors({
     'https://bendikpharmacyconsult.com',
     'https://www.bendikpharmacyconsult.com',
     'https://kit.fontawesome.com/a076d05399.js',
-    'https://bendik-pharmacy-consultancy.onrender.com/api/pay/mtn',
-    'https://bendik-pharmacy-consultancy.onrender.com/api/pay/airtel',
+    'https://bendik-pharmacy-consultancy.onrender.com/api/pay',
     'https://bendik-pharmacy-consultancy.onrender.com'
   ],
   credentials: true
