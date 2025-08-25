@@ -13,9 +13,9 @@ const router = express.Router();
 
 // ITEC Pay provider-specific API keys and base URLs
 const ITEC_MTN_API_KEY = process.env.ITEC_MTN_API_KEY || '';
-const ITEC_MTN_BASE_URL = process.env.ITEC_MTN_BASE_URL || 'https://api.itecpay.com';
+const ITEC_MTN_BASE_URL = process.env.ITEC_MTN_BASE_URL || 'https://pay.itecpay.rw/api/pay';
 const ITEC_AIRTEL_API_KEY = process.env.ITEC_AIRTEL_API_KEY || '';
-const ITEC_AIRTEL_BASE_URL = process.env.ITEC_AIRTEL_BASE_URL || 'https://api.itecpay.com';
+const ITEC_AIRTEL_BASE_URL = process.env.ITEC_AIRTEL_BASE_URL || 'https://pay.itecpay.rw/api/pay';
 
 // Card remains stubbed
 const PAYMENT_KEY_CARD = process.env.PAY_KEY_CARD || 'stub-card-key';
