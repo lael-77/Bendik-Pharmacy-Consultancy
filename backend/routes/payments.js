@@ -218,14 +218,6 @@ async function processCardPayment({ amount, currency, cardToken }) {
   }
 }
 
-import express from "express";
-import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
-import dotenv from "dotenv";
-
-dotenv.config();
-const router = express.Router();
-
 // ITEC Config
 const ITEC_BASE_URL = process.env.ITEC_MTN_BASE_URL; // e.g. https://sandbox.itec.rw/mtn
 const ITEC_API_KEY = process.env.ITEC_MTN_API_KEY;   // Your ITEC API key
