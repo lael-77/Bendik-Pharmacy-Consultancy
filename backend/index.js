@@ -177,7 +177,7 @@ db.getConnection()
           additionalInfo TEXT,
           documents TEXT,
           date DATE NOT NULL,
-          signature VARCHAR(255),
+          signature VARCHAR(255) DEFAULT 'Digital Signature',
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -282,6 +282,7 @@ db.getConnection()
           challenges TEXT,
           support TEXT,
           signatureDate DATE NOT NULL,
+          signature VARCHAR(255),
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
