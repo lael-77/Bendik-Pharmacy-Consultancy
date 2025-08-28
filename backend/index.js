@@ -313,6 +313,7 @@ app.use(cors({
     'https://www.bendikpharmacyconsult.com',
     'https://kit.fontawesome.com/a076d05399.js',
     'https://bendik-pharmacy-consultancy.onrender.com/api/pay',
+    'https://bendik-pharmacy-consultancy.onrender.com/api/pharmacy-purchase-requests',
     'https://bendik-pharmacy-consultancy.onrender.com'
   ],
   credentials: true
