@@ -25,12 +25,16 @@ async function createClientRequest(db, data) {
         requireQuotation,
         paymentMode,
         invoicingName,
-        declaration
+        declaration,
+        signature
     } = data;
+    
+    // Ensure signature has a value
+    const signatureValue = signature || fullName || 'Digital Signature';
     const [result] = await db.query(
         `INSERT INTO client_requests (
-            fullName, organizationName, businessType, nationalId, tinNumber, location, phoneNumber, email, contactMode, services, otherService, urgency, specificDates, description, PreferedInsurance, requireQuotation, paymentMode, invoicingName, declaration, createdAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            fullName, organizationName, businessType, nationalId, tinNumber, location, phoneNumber, email, contactMode, services, otherService, urgency, specificDates, description, PreferedInsurance, requireQuotation, paymentMode, invoicingName, declaration, signature, createdAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
             fullName,
             organizationName,
@@ -50,7 +54,8 @@ async function createClientRequest(db, data) {
             requireQuotation,
             paymentMode,
             invoicingName,
-            declaration
+            declaration,
+            signatureValue
         ]
     );
     return result.insertId;
