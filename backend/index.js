@@ -81,6 +81,7 @@ db.getConnection()
           paymentMode VARCHAR(50) NOT NULL,
           invoicingName VARCHAR(255),
           declaration VARCHAR(10) NOT NULL,
+          signature VARCHAR(255),
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
