@@ -41,6 +41,9 @@ async function createJobApplication(db, data) {
         signature,
         signatureDate
     } = data;
+    
+    // Ensure signature has a value
+    const signatureValue = signature || fullName || 'Digital Signature';
     const [result] = await db.query(
         `INSERT INTO job_applications (
             fullName, dob, nationality, idNumber, npcNumber, phone, email, contactMode, position, otherPosition, licenseStatus, qualification, institution, graduationYear, experience, pharmacyType, schedule, locationPref, relocate, salaryFrom, salaryTo, startDate, skills, otherSkills, employer1, position1, duration1, reason1, refName1, refRelation1, refPhone1, signature, signatureDate, cv, createdAt
@@ -77,7 +80,7 @@ async function createJobApplication(db, data) {
             refName1,
             refRelation1,
             refPhone1,
-            signature,
+            signatureValue,
             signatureDate,
             null // cv column value
         ]
