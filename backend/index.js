@@ -118,10 +118,24 @@ db.getConnection()
           supportServices TEXT,
           otherServices VARCHAR(255),
           additionalInfo TEXT,
+          clientSignature VARCHAR(255) NOT NULL,
           date DATE NOT NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
+    }
+  })
+  .then(() => {
+    // Ensure clientSignature column exists (for older deployments)
+    return db.query(
+      `SELECT COUNT(*) as count FROM information_schema.columns WHERE table_schema = ? AND table_name = 'pharmacy_purchase_requests' AND column_name = 'clientSignature'`,
+      [process.env.DB_NAME]
+    );
+  })
+  .then(([rows]) => {
+    if (rows[0].count === 0) {
+      console.log("ℹ️ Adding missing column 'clientSignature' to pharmacy_purchase_requests...");
+      return db.query(`ALTER TABLE pharmacy_purchase_requests ADD COLUMN clientSignature VARCHAR(255) NOT NULL AFTER additionalInfo`);
     }
   })
   .then(() => {
