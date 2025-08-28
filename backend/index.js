@@ -282,11 +282,19 @@ db.getConnection()
           challenges TEXT,
           support TEXT,
           signatureDate DATE NOT NULL,
-          signature VARCHAR(255),
+          signature VARCHAR(255) DEFAULT 'Digital Signature',
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
     }
+  })
+  .then(() => {
+    // Update signature field to have default value if table exists
+    return db.query("ALTER TABLE recruitment_requests MODIFY COLUMN signature VARCHAR(255) DEFAULT 'Digital Signature'");
+  })
+  .catch(err => {
+    // Column might not exist or table might not exist, ignore error
+    console.log('Note: Could not update signature column (table might not exist yet)');
   })
   .then(() => {
     // Check if payments table exists
