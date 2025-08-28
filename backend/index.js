@@ -224,6 +224,7 @@ db.getConnection()
           refName1 VARCHAR(255),
           refRelation1 VARCHAR(100),
           refPhone1 VARCHAR(50),
+          signature VARCHAR(255),
           signatureDate DATE NOT NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -328,7 +329,6 @@ app.use(cors({
     'https://kit.fontawesome.com/a076d05399.js',
     'https://bendik-pharmacy-consultancy.onrender.com/api/pay',
     'https://bendik-pharmacy-consultancy.onrender.com/api/pharmacy-purchase-requests',
-    'https://bendik-pharmacy-consultancy.onrender.com/api/job-applications',
     'https://bendik-pharmacy-consultancy.onrender.com'
   ],
   credentials: true
