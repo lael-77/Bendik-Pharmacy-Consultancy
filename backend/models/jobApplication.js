@@ -12,7 +12,7 @@ async function createJobApplication(db, data) {
         nationality,
         idNumber,
         npcNumber,
-        phone,
+        phoneNumber,
         email,
         contactMode,
         position,
@@ -41,6 +41,9 @@ async function createJobApplication(db, data) {
         signature,
         signatureDate
     } = data;
+    
+    // Map phoneNumber to phone for database compatibility
+    const phone = phoneNumber;
     
     // Ensure signature has a value
     const signatureValue = signature || fullName || 'Digital Signature';
