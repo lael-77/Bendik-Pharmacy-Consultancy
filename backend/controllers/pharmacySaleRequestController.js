@@ -22,7 +22,41 @@ async function create(req, res) {
     }
 }
 
+// Soft delete a pharmacy sale request
+async function softDelete(req, res) {
+    try {
+        const { id } = req.params;
+        const success = await pharmacySaleRequestModel.softDeletePharmacySaleRequest(req.db, id);
+        if (success) {
+            res.json({ message: 'Pharmacy sale request deleted successfully' });
+        } else {
+            res.status(404).json({ error: 'Pharmacy sale request not found' });
+        }
+    } catch (err) {
+        console.error('Error deleting pharmacy sale request:', err);
+        res.status(500).json({ error: 'Failed to delete pharmacy sale request' });
+    }
+}
+
+// Restore a soft deleted pharmacy sale request
+async function restore(req, res) {
+    try {
+        const { id } = req.params;
+        const success = await pharmacySaleRequestModel.restorePharmacySaleRequest(req.db, id);
+        if (success) {
+            res.json({ message: 'Pharmacy sale request restored successfully' });
+        } else {
+            res.status(404).json({ error: 'Pharmacy sale request not found' });
+        }
+    } catch (err) {
+        console.error('Error restoring pharmacy sale request:', err);
+        res.status(500).json({ error: 'Failed to restore pharmacy sale request' });
+    }
+}
+
 module.exports = {
     getAll,
-    create
+    create,
+    softDelete,
+    restore
 }; 

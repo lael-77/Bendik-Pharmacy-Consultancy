@@ -22,7 +22,41 @@ async function create(req, res) {
     }
 }
 
+// Soft delete a client request
+async function softDelete(req, res) {
+    try {
+        const { id } = req.params;
+        const success = await clientRequestModel.softDeleteClientRequest(req.db, id);
+        if (success) {
+            res.json({ message: 'Client request deleted successfully' });
+        } else {
+            res.status(404).json({ error: 'Client request not found' });
+        }
+    } catch (err) {
+        console.error('Error deleting client request:', err);
+        res.status(500).json({ error: 'Failed to delete client request' });
+    }
+}
+
+// Restore a soft deleted client request
+async function restore(req, res) {
+    try {
+        const { id } = req.params;
+        const success = await clientRequestModel.restoreClientRequest(req.db, id);
+        if (success) {
+            res.json({ message: 'Client request restored successfully' });
+        } else {
+            res.status(404).json({ error: 'Client request not found' });
+        }
+    } catch (err) {
+        console.error('Error restoring client request:', err);
+        res.status(500).json({ error: 'Failed to restore client request' });
+    }
+}
+
 module.exports = {
     getAll,
-    create
+    create,
+    softDelete,
+    restore
 }; 

@@ -23,7 +23,41 @@ async function create(req, res) {
     }
 }
 
+// Soft delete a job application
+async function softDelete(req, res) {
+    try {
+        const { id } = req.params;
+        const success = await jobApplicationModel.softDeleteJobApplication(req.db, id);
+        if (success) {
+            res.json({ message: 'Job application deleted successfully' });
+        } else {
+            res.status(404).json({ error: 'Job application not found' });
+        }
+    } catch (err) {
+        console.error('Error deleting job application:', err);
+        res.status(500).json({ error: 'Failed to delete job application' });
+    }
+}
+
+// Restore a soft deleted job application
+async function restore(req, res) {
+    try {
+        const { id } = req.params;
+        const success = await jobApplicationModel.restoreJobApplication(req.db, id);
+        if (success) {
+            res.json({ message: 'Job application restored successfully' });
+        } else {
+            res.status(404).json({ error: 'Job application not found' });
+        }
+    } catch (err) {
+        console.error('Error restoring job application:', err);
+        res.status(500).json({ error: 'Failed to restore job application' });
+    }
+}
+
 module.exports = {
     getAll,
-    create
+    create,
+    softDelete,
+    restore
 }; 
