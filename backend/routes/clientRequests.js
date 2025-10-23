@@ -9,4 +9,10 @@ router.post('/', clientRequestController.create);
 // Admin: Get all client requests (protected)
 router.get('/', authenticateJWT, clientRequestController.getAll);
 
+// Admin: Soft delete a client request (protected)
+router.delete('/:id', authenticateJWT, clientRequestController.softDelete);
+
+// Admin: Restore a soft deleted client request (protected)
+router.patch('/:id/restore', authenticateJWT, clientRequestController.restore);
+
 module.exports = router; 
