@@ -82,6 +82,8 @@ db.getConnection()
           invoicingName VARCHAR(255),
           declaration VARCHAR(10) NOT NULL,
           signature VARCHAR(255),
+          isDeleted BOOLEAN DEFAULT FALSE,
+          deletedAt TIMESTAMP NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -121,6 +123,8 @@ db.getConnection()
           additionalInfo TEXT,
           clientSignature VARCHAR(255) NOT NULL,
           date DATE NOT NULL,
+          isDeleted BOOLEAN DEFAULT FALSE,
+          deletedAt TIMESTAMP NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -178,6 +182,8 @@ db.getConnection()
           documents TEXT,
           date DATE NOT NULL,
           signature VARCHAR(255) DEFAULT 'Digital Signature',
+          isDeleted BOOLEAN DEFAULT FALSE,
+          deletedAt TIMESTAMP NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -228,6 +234,8 @@ db.getConnection()
           refPhone1 VARCHAR(50),
           signature VARCHAR(255),
           signatureDate DATE NOT NULL,
+          isDeleted BOOLEAN DEFAULT FALSE,
+          deletedAt TIMESTAMP NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -283,6 +291,8 @@ db.getConnection()
           support TEXT,
           signatureDate DATE NOT NULL,
           signature VARCHAR(255) DEFAULT 'Digital Signature',
+          isDeleted BOOLEAN DEFAULT FALSE,
+          deletedAt TIMESTAMP NULL,
           createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -318,6 +328,51 @@ db.getConnection()
         )
       `);
     }
+  })
+  .then(() => {
+    // Add soft delete columns to existing tables if they don't exist
+    return Promise.all([
+      // Add to client_requests
+      db.query("SELECT COUNT(*) as count FROM information_schema.columns WHERE table_schema = ? AND table_name = 'client_requests' AND column_name = 'isDeleted'", [process.env.DB_NAME])
+        .then(([rows]) => {
+          if (rows[0].count === 0) {
+            console.log("ℹ️ Adding soft delete columns to client_requests...");
+            return db.query(`ALTER TABLE client_requests ADD COLUMN isDeleted BOOLEAN DEFAULT FALSE, ADD COLUMN deletedAt TIMESTAMP NULL`);
+          }
+        }),
+      // Add to pharmacy_purchase_requests
+      db.query("SELECT COUNT(*) as count FROM information_schema.columns WHERE table_schema = ? AND table_name = 'pharmacy_purchase_requests' AND column_name = 'isDeleted'", [process.env.DB_NAME])
+        .then(([rows]) => {
+          if (rows[0].count === 0) {
+            console.log("ℹ️ Adding soft delete columns to pharmacy_purchase_requests...");
+            return db.query(`ALTER TABLE pharmacy_purchase_requests ADD COLUMN isDeleted BOOLEAN DEFAULT FALSE, ADD COLUMN deletedAt TIMESTAMP NULL`);
+          }
+        }),
+      // Add to pharmacy_sale_requests
+      db.query("SELECT COUNT(*) as count FROM information_schema.columns WHERE table_schema = ? AND table_name = 'pharmacy_sale_requests' AND column_name = 'isDeleted'", [process.env.DB_NAME])
+        .then(([rows]) => {
+          if (rows[0].count === 0) {
+            console.log("ℹ️ Adding soft delete columns to pharmacy_sale_requests...");
+            return db.query(`ALTER TABLE pharmacy_sale_requests ADD COLUMN isDeleted BOOLEAN DEFAULT FALSE, ADD COLUMN deletedAt TIMESTAMP NULL`);
+          }
+        }),
+      // Add to job_applications
+      db.query("SELECT COUNT(*) as count FROM information_schema.columns WHERE table_schema = ? AND table_name = 'job_applications' AND column_name = 'isDeleted'", [process.env.DB_NAME])
+        .then(([rows]) => {
+          if (rows[0].count === 0) {
+            console.log("ℹ️ Adding soft delete columns to job_applications...");
+            return db.query(`ALTER TABLE job_applications ADD COLUMN isDeleted BOOLEAN DEFAULT FALSE, ADD COLUMN deletedAt TIMESTAMP NULL`);
+          }
+        }),
+      // Add to recruitment_requests
+      db.query("SELECT COUNT(*) as count FROM information_schema.columns WHERE table_schema = ? AND table_name = 'recruitment_requests' AND column_name = 'isDeleted'", [process.env.DB_NAME])
+        .then(([rows]) => {
+          if (rows[0].count === 0) {
+            console.log("ℹ️ Adding soft delete columns to recruitment_requests...");
+            return db.query(`ALTER TABLE recruitment_requests ADD COLUMN isDeleted BOOLEAN DEFAULT FALSE, ADD COLUMN deletedAt TIMESTAMP NULL`);
+          }
+        })
+    ]);
   })
   .then(() => {
     console.log('✅ Database setup complete');
