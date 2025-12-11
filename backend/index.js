@@ -13,9 +13,9 @@ const db = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'bobo',
+    database: process.env.DB_NAME || 'diez',
     port: process.env.DB_PORT || 3306,
-    ssl: { rejectUnauthorized: false }, // Required for Aiven SSL
+    ssl: false, // Disable SSL for local XAMPP MySQL
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -419,6 +419,7 @@ const pharmacySaleRequestRoutes = require('./routes/pharmacySaleRequests');
 const jobApplicationRoutes = require('./routes/jobApplications');
 const recruitmentRequestRoutes = require('./routes/recruitmentRequests');
 const paymentRoutes = require('./routes/payments');
+const announcementRoutes = require('./routes/announcements');
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/client-requests', clientRequestRoutes);
@@ -427,6 +428,7 @@ app.use('/api/pharmacy-sale-requests', pharmacySaleRequestRoutes);
 app.use('/api/job-applications', jobApplicationRoutes);
 app.use('/api/recruitment-requests', recruitmentRequestRoutes);
 app.use('/api/pay', paymentRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 app.get('/', (req, res) => {
     res.send('Pharmacy backend running');
