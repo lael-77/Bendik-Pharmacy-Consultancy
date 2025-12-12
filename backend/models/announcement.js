@@ -1,12 +1,10 @@
-// Get all active announcements (for public display)
+// Get all announcements intended for public display
+// With the simplified schema, this simply returns all rows ordered by creation date.
 async function getActiveAnnouncements(db) {
     const [rows] = await db.query(`
-        SELECT id, title, message, type, priority
+        SELECT id, title, message, createdAt
         FROM announcements
-        WHERE isActive = TRUE
-        AND (startDate IS NULL OR startDate <= NOW())
-        AND (endDate IS NULL OR endDate >= NOW())
-        ORDER BY priority DESC, createdAt DESC
+        ORDER BY createdAt DESC
     `);
     return rows;
 }
@@ -15,7 +13,7 @@ async function getActiveAnnouncements(db) {
 async function getAllAnnouncements(db) {
     const [rows] = await db.query(`
         SELECT * FROM announcements
-        ORDER BY priority DESC, createdAt DESC
+        ORDER BY createdAt DESC
     `);
     return rows;
 }
@@ -28,43 +26,27 @@ async function getAnnouncementById(db, id) {
     return rows[0];
 }
 
-// Create new announcement
+// Create new announcement (simplified: only title and message)
 async function createAnnouncement(db, data) {
-    const {
-        title,
-        message,
-        type = 'info',
-        isActive = true,
-        priority = 0,
-        startDate = null,
-        endDate = null
-    } = data;
+    const { title, message } = data;
 
     const [result] = await db.query(`
-        INSERT INTO announcements (title, message, type, isActive, priority, startDate, endDate)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [title, message, type, isActive, priority, startDate, endDate]);
+        INSERT INTO announcements (title, message)
+        VALUES (?, ?)
+    `, [title, message]);
 
     return result.insertId;
 }
 
-// Update announcement
+// Update announcement (simplified: only title and message)
 async function updateAnnouncement(db, id, data) {
-    const {
-        title,
-        message,
-        type,
-        isActive,
-        priority,
-        startDate,
-        endDate
-    } = data;
+    const { title, message } = data;
 
     const [result] = await db.query(`
         UPDATE announcements
-        SET title = ?, message = ?, type = ?, isActive = ?, priority = ?, startDate = ?, endDate = ?
+        SET title = ?, message = ?
         WHERE id = ?
-    `, [title, message, type, isActive, priority, startDate, endDate, id]);
+    `, [title, message, id]);
 
     return result.affectedRows > 0;
 }
@@ -78,11 +60,13 @@ async function deleteAnnouncement(db, id) {
     return result.affectedRows > 0;
 }
 
-// Toggle announcement active status
+// Toggle announcement status
+// With the simplified schema there is no isActive flag anymore, so this becomes a
+// harmless no-op that simply touches updatedAt to avoid breaking existing routes.
 async function toggleAnnouncementStatus(db, id) {
     const [result] = await db.query(`
         UPDATE announcements
-        SET isActive = NOT isActive
+        SET updatedAt = updatedAt
         WHERE id = ?
     `, [id]);
 
