@@ -307,6 +307,22 @@ db.getConnection()
     console.log('Note: Could not update signature column (table might not exist yet)');
   })
   .then(() => {
+    // Ensure announcements table exists (robust for production)
+    console.log('ℹ️ Ensuring announcements table exists...');
+    return db.query(`
+      CREATE TABLE IF NOT EXISTS announcements (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+  })
+  .then(() => {
+    console.log('✅ announcements table ensured');
+  })
+  .then(() => {
     // Check if payments table exists
     return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'payments'", [process.env.DB_NAME]);
   })
