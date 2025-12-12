@@ -13,7 +13,8 @@ async function createAnnouncementsTable() {
             port: process.env.DB_PORT
         });
 
-        console.log('✅ Connected to database');
+        console.log('✅ Connected to MySQL database');
+        console.log(`📊 Using database: ${process.env.DB_NAME}\n`);
 
         // Create announcements table
         console.log('Creating announcements table...');
@@ -22,16 +23,8 @@ async function createAnnouncementsTable() {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 title VARCHAR(255) NOT NULL,
                 message TEXT NOT NULL,
-                type ENUM('info', 'success', 'warning', 'important') DEFAULT 'info',
-                isActive BOOLEAN DEFAULT TRUE,
-                priority INT DEFAULT 0,
-                startDate DATETIME,
-                endDate DATETIME,
                 createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                INDEX idx_isActive (isActive),
-                INDEX idx_priority (priority),
-                INDEX idx_dates (startDate, endDate)
+                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         `);
         console.log('✅ announcements table created\n');
@@ -42,7 +35,7 @@ async function createAnnouncementsTable() {
             FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'announcements'
             ORDER BY ORDINAL_POSITION
-        `, [process.env.DB_NAME || 'diez']);
+        `, [process.env.DB_NAME]);
 
         console.log('📋 Announcements Table Structure:');
         console.log('─'.repeat(60));
@@ -65,5 +58,4 @@ async function createAnnouncementsTable() {
 }
 
 createAnnouncementsTable();
-
 
