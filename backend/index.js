@@ -415,6 +415,7 @@ app.use(cors({
     'https://bendik-pharmacy-consultancy.onrender.com/api/client-requests',
     'https://bendik-pharmacy-consultancy.onrender.com/api/pharmacy-sale-requests',
     'https://bendik-pharmacy-consultancy.onrender.com/api/recruitment-requests',
+    'https://bendik-consultancy.vercel.app',
     'https://bendik-pharmacy-consultancy.onrender.com'
   ],
   credentials: true
