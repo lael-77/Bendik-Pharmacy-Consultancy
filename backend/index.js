@@ -306,6 +306,204 @@ db.getConnection()
     // Column might not exist or table might not exist, ignore error
     console.log('Note: Could not update signature column (table might not exist yet)');
   })
+  
+  .then(() => {
+    // Check if nurse_job_applications table exists
+    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'nurse_job_applications'", [process.env.DB_NAME]);
+  })
+  .then(([rows]) => {
+    if (rows[0].count > 0) {
+      console.log('✅ nurse_job_applications table exists');
+    } else {
+      console.log('❌ nurse_job_applications table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE nurse_job_applications (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          fullName VARCHAR(255) NOT NULL,
+          dob DATE,
+          nationality VARCHAR(100),
+          idNumber VARCHAR(100),
+          npcNumber VARCHAR(100),
+          phone VARCHAR(50) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          contactMode TEXT,
+          position VARCHAR(100),
+          otherPosition VARCHAR(255),
+          licenseStatus VARCHAR(50),
+          qualification VARCHAR(255),
+          institution VARCHAR(255),
+          graduationYear VARCHAR(10),
+          experience VARCHAR(50),
+          pharmacyType TEXT,
+          schedule VARCHAR(50),
+          locationPref VARCHAR(255),
+          relocate VARCHAR(10),
+          salaryFrom VARCHAR(100),
+          salaryTo VARCHAR(100),
+          startDate DATE,
+          skills TEXT,
+          otherSkills TEXT,
+          employer1 VARCHAR(255),
+          position1 VARCHAR(255),
+          duration1 VARCHAR(100),
+          reason1 VARCHAR(255),
+          refName1 VARCHAR(255),
+          refRelation1 VARCHAR(100),
+          refPhone1 VARCHAR(50),
+          signature VARCHAR(255),
+          signatureDate DATE NOT NULL,
+          cv VARCHAR(255),
+          isDeleted BOOLEAN DEFAULT FALSE,
+          deletedAt TIMESTAMP NULL,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
+  .then(() => {
+    // Check if nurse_recruitment_requests table exists
+    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'nurse_recruitment_requests'", [process.env.DB_NAME]);
+  })
+  .then(([rows]) => {
+    if (rows[0].count > 0) {
+      console.log('✅ nurse_recruitment_requests table exists');
+    } else {
+      console.log('❌ nurse_recruitment_requests table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE nurse_recruitment_requests (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          pharmacyName VARCHAR(255) NOT NULL,
+          contactPerson VARCHAR(255) NOT NULL,
+          phoneNumber VARCHAR(50) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          location VARCHAR(255) NOT NULL,
+          type TEXT,
+          typeOther VARCHAR(255),
+          branches INT,
+          staffCount INT,
+          position VARCHAR(100),
+          positionsAvailable INT,
+          employmentType VARCHAR(50),
+          startDate DATE,
+          workingHours VARCHAR(255),
+          salaryFrom VARCHAR(100),
+          salaryTo VARCHAR(100),
+          housingTransport VARCHAR(10),
+          bonus VARCHAR(10),
+          bonusDetails VARCHAR(255),
+          qualification TEXT,
+          license TEXT,
+          experience VARCHAR(50),
+          language TEXT,
+          otherLanguage VARCHAR(100),
+          additionalSkills TEXT,
+          responsibility1 VARCHAR(255),
+          responsibility2 VARCHAR(255),
+          responsibility3 VARCHAR(255),
+          responsibility4 VARCHAR(255),
+          responsibility5 VARCHAR(255),
+          reportingLine VARCHAR(255),
+          systemUsed VARCHAR(255),
+          teamStructure VARCHAR(255),
+          training VARCHAR(10),
+          challenges TEXT,
+          support TEXT,
+          signatureDate DATE NOT NULL,
+          signature VARCHAR(255) DEFAULT 'Digital Signature',
+          isDeleted BOOLEAN DEFAULT FALSE,
+          deletedAt TIMESTAMP NULL,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
+  .then(() => {
+    // Check if clinic_purchase_requests table exists
+    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'clinic_purchase_requests'", [process.env.DB_NAME]);
+  })
+  .then(([rows]) => {
+    if (rows[0].count > 0) {
+      console.log('✅ clinic_purchase_requests table exists');
+    } else {
+      console.log('❌ clinic_purchase_requests table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE clinic_purchase_requests (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          buyerName VARCHAR(255) NOT NULL,
+          phoneNumber VARCHAR(50) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          contactMethod VARCHAR(50) NOT NULL,
+          nationalId VARCHAR(100),
+          tinNumber VARCHAR(100),
+          pharmacyType TEXT,
+          otherType VARCHAR(255),
+          preferredLocation VARCHAR(255),
+          operatingArea VARCHAR(50),
+          businessStatus VARCHAR(50),
+          ownershipType VARCHAR(50),
+          minRevenue VARCHAR(100),
+          budgetRange VARCHAR(100),
+          budgetFlexible VARCHAR(20),
+          timeline VARCHAR(50),
+          insurancePartners VARCHAR(255),
+          supportServices TEXT,
+          otherServices VARCHAR(255),
+          additionalInfo TEXT,
+          clientSignature VARCHAR(255) NOT NULL,
+          date DATE NOT NULL,
+          isDeleted BOOLEAN DEFAULT FALSE,
+          deletedAt TIMESTAMP NULL,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
+  .then(() => {
+    // Check if clinic_sale_requests table exists
+    return db.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ? AND table_name = 'clinic_sale_requests'", [process.env.DB_NAME]);
+  })
+  .then(([rows]) => {
+    if (rows[0].count > 0) {
+      console.log('✅ clinic_sale_requests table exists');
+    } else {
+      console.log('❌ clinic_sale_requests table does not exist - creating it...');
+      return db.query(`
+        CREATE TABLE clinic_sale_requests (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          ownerName VARCHAR(255) NOT NULL,
+          phoneNumber VARCHAR(50) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          contactMode VARCHAR(50),
+          pharmacyName VARCHAR(255),
+          businessType VARCHAR(50),
+          location VARCHAR(255),
+          ownershipType VARCHAR(50),
+          premisesSize VARCHAR(50),
+          licenseStatus VARCHAR(50),
+          years VARCHAR(50),
+          salesRange VARCHAR(100),
+          insurancePartners VARCHAR(255),
+          staffCount VARCHAR(50),
+          inventoryValue VARCHAR(100),
+          equipmentIncluded VARCHAR(50),
+          reason VARCHAR(255),
+          debts VARCHAR(10),
+          debtAmount VARCHAR(100),
+          price VARCHAR(100),
+          negotiable VARCHAR(10),
+          timeline VARCHAR(50),
+          valuationService VARCHAR(10),
+          additionalInfo TEXT,
+          documents TEXT,
+          date DATE NOT NULL,
+          signature VARCHAR(255) DEFAULT 'Digital Signature',
+          isDeleted BOOLEAN DEFAULT FALSE,
+          deletedAt TIMESTAMP NULL,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    }
+  })
   .then(() => {
     // Ensure announcements table exists (robust for production)
     console.log('ℹ️ Ensuring announcements table exists...');
@@ -403,6 +601,8 @@ db.getConnection()
     });
   });
 
+
+
 app.use(cors({
   origin: [
     'http://localhost:3000',
@@ -429,6 +629,11 @@ app.use((req, res, next) => {
     next();
 });
 
+
+const nurseJobApplicationRoutes = require('./routes/nurseJobApplications');
+const nurseRecruitmentRequestRoutes = require('./routes/nurseRecruitmentRequests');
+const clinicPurchaseRequestRoutes = require('./routes/clinicPurchaseRequests');
+const clinicSaleRequestRoutes = require('./routes/clinicSaleRequests');
 const adminRoutes = require('./routes/admin');
 const clientRequestRoutes = require('./routes/clientRequests');
 const pharmacyPurchaseRequestRoutes = require('./routes/pharmacyPurchaseRequests');
@@ -438,6 +643,11 @@ const recruitmentRequestRoutes = require('./routes/recruitmentRequests');
 const paymentRoutes = require('./routes/payments');
 const announcementRoutes = require('./routes/announcements');
 
+
+app.use('/api/nurse-job-applications', nurseJobApplicationRoutes);
+app.use('/api/nurse-recruitment-requests', nurseRecruitmentRequestRoutes);
+app.use('/api/clinic-purchase-requests', clinicPurchaseRequestRoutes);
+app.use('/api/clinic-sale-requests', clinicSaleRequestRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/client-requests', clientRequestRoutes);
 app.use('/api/pharmacy-purchase-requests', pharmacyPurchaseRequestRoutes);
